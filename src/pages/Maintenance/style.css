@@ -1,0 +1,20 @@
+.side-nav-btn {
+  outline: none;
+  appearance: none;
+}
+
+.side-nav-btn:focus,
+.side-nav-btn:focus-visible,
+.side-nav-btn:active {
+  outline: none;
+  box-shadow: none;
+}
+
+.maintenance-kpi-card {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.maintenance-kpi-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 20px rgba(0, 30, 64, 0.08);
+}

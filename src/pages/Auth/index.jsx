@@ -1,0 +1,264 @@
+﻿import { useEffect, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
+import { useAuth } from "../../hooks/useAuth";
+import heroImage from "../../assets/hero.png";
+import "./style.css";
+
+function SignInPage() {
+  const [showPassword, setShowPassword] = useState(false);
+  const [supportNotice, setSupportNotice] = useState("");
+  const {
+    form,
+    remember,
+    loading,
+    error,
+    isAuthenticated,
+    setField,
+    setRemember,
+    submit,
+    clearError,
+    hydrate,
+  } = useAuth();
+
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  useEffect(() => {
+    hydrate();
+  }, [hydrate]);
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      const redirectTo = location.state?.from?.pathname || "/dashboard";
+      navigate(redirectTo, { replace: true });
+    }
+  }, [isAuthenticated, location.state, navigate]);
+
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    await submit();
+  };
+
+  const openSupportNotice = (event) => {
+    event.preventDefault();
+    setSupportNotice("Vui lòng liên hệ quản trị hệ thống để được cấp lại mật khẩu.");
+  };
+
+  return (
+    <div className="bg-surface text-on-surface antialiased overflow-hidden">
+      <main className="flex min-h-screen w-full">
+        <section className="hidden lg:flex lg:w-1/2 relative flex-col justify-between p-12 overflow-hidden bg-primary">
+          <div className="absolute inset-0 z-0">
+            <img
+              className="w-full h-full object-cover opacity-40 grayscale-[0.2]"
+              data-alt="Modern high-tech factory interior with robotic arms and blue atmospheric lighting, shallow depth of field, premium industrial aesthetic"
+              src={heroImage}
+              alt="Factory"
+            />
+            <div className="absolute inset-0 bg-gradient-to-tr from-primary via-primary/80 to-transparent" />
+          </div>
+
+          <div className="relative z-10 flex items-center gap-3">
+            <div className="bg-tertiary-fixed-dim p-2 rounded-lg">
+              <span
+                className="material-symbols-outlined text-primary text-2xl"
+                style={{ fontVariationSettings: "'FILL' 1" }}
+              >
+                precision_manufacturing
+              </span>
+            </div>
+            <div>
+              <h1 className="shell-brand-title tracking-tighter text-white uppercase leading-none">
+                Digital Foreman
+              </h1>
+              <p className="shell-brand-subtitle mt-1 text-tertiary-fixed-dim">
+                Hệ thống Kỹ nghệ số
+              </p>
+            </div>
+          </div>
+
+          <div className="relative z-10 max-w-lg">
+            <h2 className="text-4xl md:text-5xl font-bold text-white tracking-tight leading-tight">
+              Sự chính xác trong <br />
+              <span className="text-tertiary-fixed-dim">từng chuyển động.</span>
+            </h2>
+            <div className="mt-8 flex gap-4">
+              <div className="h-1 w-12 bg-tertiary-fixed-dim rounded-full" />
+              <p className="text-on-primary-container text-sm leading-relaxed max-w-xs">
+                Tối ưu hóa quy trình bảo trì và vận hành nhà máy với giải pháp kỹ thuật
+                số chính xác tuyệt đối.
+              </p>
+            </div>
+          </div>
+
+          <div className="relative z-10 flex items-center justify-between text-[11px] text-on-primary-container/60 font-medium tracking-widest uppercase">
+            <span>Precision Architecture v2.4</span>
+            <div className="flex gap-6">
+              <span>Active Monitoring</span>
+              <span>AI-Driven Maintenance</span>
+            </div>
+          </div>
+        </section>
+
+        <section className="w-full lg:w-1/2 flex flex-col justify-center items-center p-6 md:p-12 lg:p-24 bg-surface-container-lowest">
+          <div className="w-full max-w-md">
+            <div className="lg:hidden mb-12 flex items-center gap-3">
+              <span
+                className="material-symbols-outlined text-primary-container text-3xl"
+                style={{ fontVariationSettings: "'FILL' 1" }}
+              >
+                precision_manufacturing
+              </span>
+              <h1 className="shell-brand-title tracking-tighter text-primary uppercase">
+                Digital Foreman
+              </h1>
+            </div>
+
+            <div className="mb-10">
+              <h2 className="text-3xl font-bold text-primary tracking-tight mb-2">
+                Đăng nhập hệ thống
+              </h2>
+              <p className="text-on-surface-variant text-sm">
+                Vui lòng nhập thông tin tài khoản của bạn.
+              </p>
+            </div>
+
+            <form className="space-y-6" onSubmit={handleSubmit}>
+              <div className="space-y-2">
+                <label className="text-xs font-semibold uppercase tracking-wider text-on-surface-variant ml-1" htmlFor="email">
+                  Email
+                </label>
+                <div className="relative group">
+                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-outline">
+                    <span className="material-symbols-outlined text-[20px]">mail</span>
+                  </div>
+                  <input
+                    id="email"
+                    className="block w-full pl-11 pr-4 py-4 bg-surface-container-low border-none rounded-xl text-on-surface placeholder:text-outline/60 focus:ring-2 focus:ring-tertiary-fixed-dim/50 transition-all duration-200 text-sm"
+                    placeholder="admin@factory.local"
+                    type="email"
+                    value={form.email}
+                    autoComplete="email"
+                    onChange={(event) => {
+                      clearError();
+                      setField("email", event.target.value);
+                    }}
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <div className="flex justify-between items-center px-1">
+                  <label className="text-xs font-semibold uppercase tracking-wider text-on-surface-variant" htmlFor="password">
+                    Mật khẩu
+                  </label>
+                  <a
+                    className="text-xs font-semibold text-primary-container hover:text-tertiary-fixed-dim transition-colors"
+                    href="#"
+                    onClick={openSupportNotice}
+                  >
+                    Quên mật khẩu?
+                  </a>
+                </div>
+                <div className="relative group">
+                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-outline">
+                    <span className="material-symbols-outlined text-[20px]">lock</span>
+                  </div>
+                  <input
+                    id="password"
+                    className="block w-full pl-11 pr-12 py-4 bg-surface-container-low border-none rounded-xl text-on-surface placeholder:text-outline/60 focus:ring-2 focus:ring-tertiary-fixed-dim/50 transition-all duration-200 text-sm"
+                    placeholder="********"
+                    type={showPassword ? "text" : "password"}
+                    value={form.password}
+                    autoComplete="current-password"
+                    onChange={(event) => {
+                      clearError();
+                      setField("password", event.target.value);
+                    }}
+                    required
+                  />
+                  <button
+                    className="absolute inset-y-0 right-0 pr-4 flex items-center text-outline hover:text-on-surface transition-colors"
+                    type="button"
+                    onClick={() => setShowPassword((prev) => !prev)}
+                    aria-label={showPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
+                  >
+                    <span className="material-symbols-outlined text-[20px]">
+                      {showPassword ? "visibility_off" : "visibility"}
+                    </span>
+                  </button>
+                </div>
+              </div>
+
+              <div className="flex items-center ml-1">
+                <input
+                  className="w-4 h-4 rounded-lg border-outline-variant text-primary-container focus:ring-tertiary-fixed-dim/50 cursor-pointer"
+                  id="remember"
+                  type="checkbox"
+                  checked={remember}
+                  onChange={(event) => setRemember(event.target.checked)}
+                />
+                <label className="ml-3 text-sm text-on-surface-variant select-none cursor-pointer" htmlFor="remember">
+                  Ghi nhớ đăng nhập
+                </label>
+              </div>
+
+              {error ? (
+                <div className="app-notice app-notice-error">
+                  {error}
+                </div>
+              ) : null}
+
+              {supportNotice ? (
+                <div className="app-notice app-notice-info">
+                  <span>{supportNotice}</span>
+                  <button
+                    type="button"
+                    className="app-notice-close"
+                    onClick={() => setSupportNotice("")}
+                    aria-label="Đóng thông báo hỗ trợ"
+                  >
+                    <span className="material-symbols-outlined text-[18px]">close</span>
+                  </button>
+                </div>
+              ) : null}
+
+              <button
+                className="w-full py-4 bg-primary-container text-white font-bold rounded-xl shadow-xl shadow-primary-container/10 hover:shadow-primary-container/20 active:scale-[0.98] transition-all duration-200 flex items-center justify-center gap-2 group disabled:opacity-60 disabled:cursor-not-allowed"
+                type="submit"
+                disabled={loading}
+              >
+                <span>{loading ? "Đang đăng nhập..." : "Đăng nhập"}</span>
+                <span className="material-symbols-outlined text-[18px] group-hover:translate-x-1 transition-transform">
+                  arrow_forward
+                </span>
+              </button>
+            </form>
+
+            <div className="mt-16 pt-8 border-t border-surface-container flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div className="flex items-center gap-2 text-xs text-on-surface-variant">
+                <span className="material-symbols-outlined text-[16px]">support_agent</span>
+                <span>Hỗ trợ kỹ thuật: 1900 6789</span>
+              </div>
+              <div className="text-[10px] font-bold text-outline uppercase tracking-widest">
+                Phiên bản 4.0.2-Stable
+              </div>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      <div className="fixed bottom-0 right-0 p-8 opacity-10 pointer-events-none">
+        <span
+          className="material-symbols-outlined text-[200px]"
+          style={{ fontVariationSettings: "'wght' 100" }}
+        >
+          engineering
+        </span>
+      </div>
+    </div>
+  );
+}
+
+export default SignInPage;

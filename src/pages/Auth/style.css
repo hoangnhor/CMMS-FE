@@ -1,0 +1,4 @@
+.glass-panel {
+  background: rgba(246, 250, 254, 0.8);
+  backdrop-filter: blur(20px);
+}

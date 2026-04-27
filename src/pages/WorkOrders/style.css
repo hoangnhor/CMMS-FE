@@ -1,0 +1,20 @@
+﻿
+.side-nav-btn {
+  outline: none;
+  appearance: none;
+}
+
+.side-nav-btn:focus,
+.side-nav-btn:focus-visible,
+.side-nav-btn:active {
+  outline: none;
+  box-shadow: none;
+}
+
+.status-glow-amber {
+  box-shadow: 0 0 12px rgba(245, 158, 11, 0.4);
+}
+
+.status-glow-error {
+  box-shadow: 0 0 12px rgba(186, 26, 26, 0.4);
+}

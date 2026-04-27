@@ -1,0 +1,15 @@
+.side-nav-btn {
+  outline: none;
+  appearance: none;
+}
+
+.side-nav-btn:focus,
+.side-nav-btn:focus-visible,
+.side-nav-btn:active {
+  outline: none;
+  box-shadow: none;
+}
+
+.users-role-chip {
+  letter-spacing: -0.01em;
+}
