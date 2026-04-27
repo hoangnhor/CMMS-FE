@@ -1,5 +1,6 @@
 ﻿import axios from "axios";
 
+
 const TOKEN_KEY = "am_token";
 
 function readToken() {
@@ -14,7 +15,11 @@ function clearAuthStorage() {
 }
 
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api",
+  baseURL: (() => {
+    const rawBaseUrl = import.meta.env.VITE_API_BASE_URL?.trim();
+    const normalizedBaseUrl = (rawBaseUrl || "http://localhost:5000/api").replace(/\/+$/, "");
+    return normalizedBaseUrl.endsWith("/api") ? normalizedBaseUrl : `${normalizedBaseUrl}/api`;
+  })(),
   headers: {
     "Content-Type": "application/json",
   },
