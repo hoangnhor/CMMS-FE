@@ -17,7 +17,7 @@ function clearAuthStorage() {
 const api = axios.create({
   baseURL: (() => {
     const rawBaseUrl = import.meta.env.VITE_API_BASE_URL?.trim();
-    const normalizedBaseUrl = (rawBaseUrl || "http://localhost:5000/api").replace(/\/+$/, "");
+    const normalizedBaseUrl = (rawBaseUrl || "https://cmms-be.onrender.com/api").replace(/\/+$/, "");
     return normalizedBaseUrl.endsWith("/api") ? normalizedBaseUrl : `${normalizedBaseUrl}/api`;
   })(),
   headers: {
