@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import AppShell from "../../components/layout/AppShell";
 import { useAuthStore } from "../../store/authStore";
 import { createUserApi, listUsersApi, updateUserStatusApi } from "../../services/user.api";
 import { subscribeRealtime } from "../../services/realtime";
-import { getDisplayName, getInitials, mapRoleLabel } from "../../utils/userDisplay";
+import { getInitials } from "../../utils/userDisplay";
 import "./style.css";
 
 const PAGE_SIZE = 12;
@@ -191,98 +192,23 @@ function UsersPage() {
   const totalUsers = users.length;
 
   return (
-    <div className="bg-[#eef3f8] text-on-surface min-h-screen">
-      <aside className="bg-[#001e40] dark:bg-[#000511] h-screen w-64 fixed left-0 top-0 shadow-2xl shadow-black/20 flex flex-col py-6 z-50">
-        <div className="px-6 mb-10">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-[#4edea3] flex items-center justify-center rounded">
-              <span className="material-symbols-outlined text-primary text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>precision_manufacturing</span>
-            </div>
-            <div>
-              <h1 className="shell-brand-title tracking-tighter text-white uppercase font-headline">Digital Foreman</h1>
-              <p className="shell-brand-subtitle">Hệ thống Kỹ nghệ Số</p>
-            </div>
-          </div>
-        </div>
-
-        <nav className="flex-1 space-y-1 px-3">
-          <a className="side-nav-btn w-full flex items-center gap-3 px-4 py-3 text-slate-300 hover:text-white hover:bg-white/5 transition-all duration-200 active:scale-95 text-left" href="#" onClick={(e) => { e.preventDefault(); navigate("/dashboard"); }}>
-            <span className="material-symbols-outlined text-xl">dashboard</span>
-            <span className="font-['Inter'] shell-nav-text">Bảng điều khiển</span>
-          </a>
-          <a className="side-nav-btn w-full flex items-center gap-3 px-4 py-3 text-slate-300 hover:text-white hover:bg-white/5 transition-all duration-200 active:scale-95 text-left" href="#" onClick={(e) => { e.preventDefault(); navigate("/assets"); }}>
-            <span className="material-symbols-outlined text-xl">precision_manufacturing</span>
-            <span className="font-['Inter'] shell-nav-text">Tài sản</span>
-          </a>
-          <a className="side-nav-btn w-full flex items-center gap-3 px-4 py-3 text-slate-300 hover:text-white hover:bg-white/5 transition-all duration-200 active:scale-95 text-left" href="#" onClick={(e) => { e.preventDefault(); navigate("/work-orders"); }}>
-            <span className="material-symbols-outlined text-xl">engineering</span>
-            <span className="font-['Inter'] shell-nav-text">Lệnh công việc</span>
-          </a>
-          <a className="side-nav-btn w-full flex items-center gap-3 px-4 py-3 text-slate-300 hover:text-white hover:bg-white/5 transition-all duration-200 active:scale-95 text-left" href="#" onClick={(e) => { e.preventDefault(); navigate("/maintenance"); }}>
-            <span className="material-symbols-outlined text-xl">build</span>
-            <span className="font-['Inter'] shell-nav-text">Bảo trì</span>
-          </a>
-          <a className="side-nav-btn w-full flex items-center gap-3 px-4 py-3 bg-white/10 text-[#4edea3] border-r-4 border-[#4edea3] transition-all duration-200 active:scale-95 text-left" href="#" onClick={(e) => e.preventDefault()}>
-            <span className="material-symbols-outlined text-xl" style={{ fontVariationSettings: "'FILL' 1" }}>group</span>
-            <span className="font-['Inter'] shell-nav-text">Người dùng</span>
-          </a>
-        </nav>
-
-        <div className="px-3 mt-auto">
-          <a className="side-nav-btn w-full flex items-center gap-3 px-4 py-3 text-slate-300 hover:text-white hover:bg-white/5 transition-all duration-200 active:scale-95 text-left" href="#" onClick={handleLogout}>
-            <span className="material-symbols-outlined text-xl">logout</span>
-            <span className="font-['Inter'] shell-nav-text">Đăng xuất</span>
-          </a>
-        </div>
-      </aside>
-
-      <main className="ml-64 pt-16 min-h-screen bg-[#eef3f8]">
-        <header className="shell-header fixed top-0 right-0 left-64 h-16 flex justify-between items-center px-8 w-full z-40">
-          <div className="shell-search-wrap relative group">
-            <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[18px]">search</span>
-            <input
-              className="shell-search-input w-full border-none rounded-lg py-2 pl-10 pr-4 focus:ring-2 focus:ring-[#4edea3]/50 transition-all outline-none"
-              placeholder="Tìm kiếm tài khoản, email hoặc vai trò..."
-              type="text"
-              value={search}
-              onChange={(event) => { setSearch(event.target.value); setPage(1); }}
-            />
-          </div>
-
-          <div className="flex items-center space-x-6">
-            <div className="flex items-center space-x-4 relative" ref={notificationsRef}>
-              <button className="text-slate-500 hover:text-[#4edea3] transition-colors relative" type="button" onClick={() => setShowNotifications((prev) => !prev)}>
-                <span className="material-symbols-outlined" style={{ fontVariationSettings: showNotifications ? "'FILL' 1" : "'FILL' 0" }}>notifications</span>
-                {notifications.length > 0 ? <span className="absolute top-0 right-0 w-2 h-2 bg-error rounded-full" /> : null}
-              </button>
-              <button className="text-slate-500 hover:text-[#4edea3] transition-colors" type="button" onClick={() => setShowHelp(true)}>
-                <span className="material-symbols-outlined" style={{ fontVariationSettings: showHelp ? "'FILL' 1" : "'FILL' 0" }}>help</span>
-              </button>
-
-              {showNotifications ? (
-                <div className="absolute right-0 top-10 w-96 bg-white border border-slate-200 rounded-xl shadow-xl z-50 p-3">
-                  <div className="text-sm font-bold text-primary px-2 pb-2 border-b border-slate-100">Thông báo người dùng</div>
-                  <div className="max-h-72 overflow-auto mt-2 space-y-2">
-                    {notifications.length === 0 ? <div className="text-sm text-slate-500 px-2 py-3">Không có thông báo mới.</div> : notifications.map((item) => (
-                      <div key={item.id} className={`px-3 py-2 rounded-lg text-sm ${item.tone}`}>{item.text}</div>
-                    ))}
-                  </div>
-                </div>
-              ) : null}
-            </div>
-
-            <div className="flex items-center space-x-3 pl-6 border-l border-slate-200/50">
-              <div className="text-right">
-                <p className="app-user-name">{getDisplayName(user)}</p>
-                <p className="app-user-role">{mapRoleLabel(user?.role)}</p>
-              </div>
-              <div className="shell-user-avatar shell-user-avatar-initials ring-2 ring-surface-container">
-                {getInitials(user)}
-              </div>
-            </div>
-          </div>
-        </header>
-
+    <>
+      <AppShell
+        currentKey="users"
+        user={user}
+        search={search}
+        onSearchChange={(value) => {
+          setSearch(value);
+          setPage(1);
+        }}
+        searchPlaceholder="Tìm kiếm tài khoản, email hoặc vai trò..."
+        notifications={notifications}
+        notificationsRef={notificationsRef}
+        showNotifications={showNotifications}
+        setShowNotifications={setShowNotifications}
+        setShowHelp={setShowHelp}
+        onLogout={handleLogout}
+      >
         <div className="shell-page-wrap space-y-8">
           {notice.text ? (
             <div className={`app-notice ${notice.type === "error" ? "app-notice-error" : "app-notice-success"}`}>
@@ -498,7 +424,7 @@ function UsersPage() {
             </div>
           </div>
         </div>
-      </main>
+      </AppShell>
 
       {showHelp ? (
         <div className="app-modal-overlay z-[60]" onClick={() => setShowHelp(false)}>
@@ -512,7 +438,7 @@ function UsersPage() {
           </div>
         </div>
       ) : null}
-    </div>
+    </>
   );
 }
 

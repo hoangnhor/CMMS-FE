@@ -197,6 +197,19 @@ body {
   padding: 32px;
 }
 
+.shell-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.shell-section-card {
+  border: 1px solid rgba(226, 232, 240, 0.7);
+  border-radius: 12px;
+  background: #ffffff;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
+}
+
 .shell-user-avatar {
   width: 36px;
   height: 36px;
@@ -234,6 +247,8 @@ body {
 
 .app-modal-panel {
   width: 100%;
+  max-height: min(92vh, 960px);
+  overflow: auto;
   background: #ffffff;
   border: 1px solid #e2e8f0;
   border-radius: 12px;
@@ -359,4 +374,18 @@ body {
 
 .app-notice-close:hover {
   opacity: 1;
+}
+
+@media (max-width: 1023px) {
+  .shell-page-wrap {
+    padding: 20px 16px 24px;
+  }
+
+  .app-page-title {
+    font-size: 24px;
+  }
+
+  .app-page-subtitle {
+    font-size: 13px;
+  }
 }

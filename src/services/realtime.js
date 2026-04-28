@@ -3,8 +3,17 @@ import { useAuthStore } from "../store/authStore";
 
 let socketInstance = null;
 
+function resolveApiBaseUrl() {
+  const rawBaseUrl = import.meta.env.VITE_API_BASE_URL?.trim();
+  if (!rawBaseUrl && import.meta.env.PROD) {
+    throw new Error("VITE_API_BASE_URL is required for production builds");
+  }
+  const normalizedBaseUrl = (rawBaseUrl || "http://localhost:5000/api").replace(/\/+$/, "");
+  return normalizedBaseUrl.endsWith("/api") ? normalizedBaseUrl : `${normalizedBaseUrl}/api`;
+}
+
 function getRealtimeUrl() {
-  const apiBase = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api";
+  const apiBase = resolveApiBaseUrl();
   return apiBase.endsWith("/api") ? apiBase.slice(0, -4) : apiBase;
 }
 
