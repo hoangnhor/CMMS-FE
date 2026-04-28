@@ -1,11 +1,9 @@
-﻿import api from "./api";
+import { get, post } from "./http";
 
 export async function loginApi(payload) {
-  const response = await api.post("/auth/login", payload);
-  return response.data;
+  return post("/auth/login", payload);
 }
 
 export async function meApi() {
-  const response = await api.get("/auth/me");
-  return response.data;
+  return get("/auth/me");
 }

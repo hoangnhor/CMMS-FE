@@ -3,45 +3,8 @@ import { useNavigate } from "react-router-dom";
 import AppShell from "../../components/layout/AppShell";
 import { useAuthStore } from "../../store/authStore";
 import { useDashboard } from "../../hooks/useDashboard";
+import { buildChartHeights, buildDashboardNotifications, buildWorkOrderSearchText, formatNowTime, mapNotificationTone, mapPriority, mapStatus } from "./helpers";
 import "./style.css";
-
-function formatNowTime(value) {
-  return new Date(value || Date.now()).toLocaleTimeString("vi-VN", {
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-}
-
-function mapPriority(priority) {
-  if (priority === "urgent") return { label: "Khẩn cấp", tone: "text-error", dot: "bg-error" };
-  if (priority === "high") return { label: "Cao", tone: "text-amber-600", dot: "bg-amber-500" };
-  if (priority === "medium") return { label: "Trung bình", tone: "text-blue-600", dot: "bg-blue-600" };
-  return { label: "Thấp", tone: "text-slate-500", dot: "bg-slate-400" };
-}
-
-function mapStatus(status) {
-  if (status === "in_progress") return { label: "Đang thực hiện", cls: "bg-[#4edea3]/10 text-tertiary-fixed-dim" };
-  if (status === "pending_approval") return { label: "Chờ duyệt", cls: "bg-amber-100 text-amber-700" };
-  if (status === "approved") return { label: "Đã duyệt", cls: "bg-blue-100 text-blue-700" };
-  if (status === "done") return { label: "Hoàn thành", cls: "bg-slate-100 text-slate-500" };
-  if (status === "rejected") return { label: "Từ chối", cls: "bg-error-container text-error" };
-  return { label: "Bản nháp", cls: "bg-violet-100 text-violet-700" };
-}
-
-function buildNotifications(stats, workOrders) {
-  const items = [];
-  if (stats.overdueOrders > 0) {
-    items.push({ id: "overdue", level: "error", text: `Có ${stats.overdueOrders} lệnh công việc quá hạn cần xử lý.` });
-  }
-  if (stats.maintenanceNeeded > 0) {
-    items.push({ id: "maintenance", level: "warning", text: `Có ${stats.maintenanceNeeded} tài sản cần bảo trì.` });
-  }
-  const pending = workOrders.filter((item) => item.status === "pending_approval").length;
-  if (pending > 0) {
-    items.push({ id: "pending", level: "info", text: `Có ${pending} work order đang chờ duyệt.` });
-  }
-  return items;
-}
 
 function DashboardPage() {
   const user = useAuthStore((state) => state.user);
@@ -57,27 +20,13 @@ function DashboardPage() {
   const { loading, refreshing, error, stats, chart, maxBarValue, donut, allWorkOrders, recentWorkOrders, lastUpdatedAt } = useDashboard();
 
   const subtitleTime = useMemo(() => formatNowTime(lastUpdatedAt), [lastUpdatedAt]);
-  const notifications = useMemo(() => buildNotifications(stats, allWorkOrders), [stats, allWorkOrders]);
+  const notifications = useMemo(() => buildDashboardNotifications(stats, allWorkOrders), [stats, allWorkOrders]);
 
   const filteredWorkOrders = useMemo(() => {
     const keyword = searchTerm.trim().toLowerCase();
     if (!keyword) return recentWorkOrders;
     return allWorkOrders
-      .filter((wo) => {
-        const haystack = [
-          wo.woCode,
-          wo.assetId?.name,
-          wo.assetId?.assetCode,
-          wo.assignedTo?.name,
-          wo.createdBy?.name,
-          wo.woType,
-          wo.status,
-        ]
-          .filter(Boolean)
-          .join(" ")
-          .toLowerCase();
-        return haystack.includes(keyword);
-      })
+      .filter((wo) => buildWorkOrderSearchText(wo).includes(keyword))
       .slice(0, 20);
   }, [searchTerm, allWorkOrders, recentWorkOrders]);
 
@@ -87,19 +36,7 @@ function DashboardPage() {
     navigate("/auth", { replace: true });
   };
 
-  const topHeights = chart.map((item) => {
-    const total = item.completed + item.inProgress;
-    if (!total) return 0;
-    const totalHeight = (total / maxBarValue) * 80;
-    return (item.inProgress / total) * totalHeight;
-  });
-
-  const bottomHeights = chart.map((item) => {
-    const total = item.completed + item.inProgress;
-    if (!total) return 0;
-    const totalHeight = (total / maxBarValue) * 80;
-    return (item.completed / total) * totalHeight;
-  });
+  const chartHeights = useMemo(() => buildChartHeights(chart, maxBarValue), [chart, maxBarValue]);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -114,25 +51,17 @@ function DashboardPage() {
   return (
     <>
       <AppShell
-      currentKey="dashboard"
-      user={user}
-      search={searchTerm}
-      onSearchChange={setSearchTerm}
-      searchPlaceholder="Tìm kiếm tài sản, mã số hoặc vị trí..."
-      notifications={notifications.map((item) => ({
-        ...item,
-        tone:
-          item.level === "error"
-            ? "bg-red-50 text-red-700"
-            : item.level === "warning"
-              ? "bg-amber-50 text-amber-700"
-              : "bg-blue-50 text-blue-700",
-      }))}
-      notificationsRef={notificationsRef}
-      showNotifications={showNotifications}
-      setShowNotifications={setShowNotifications}
-      setShowHelp={setShowHelp}
-      onLogout={handleLogout}
+        currentKey="dashboard"
+        user={user}
+        search={searchTerm}
+        onSearchChange={setSearchTerm}
+        searchPlaceholder="Tìm kiếm tài sản, mã số hoặc vị trí..."
+        notifications={notifications.map(mapNotificationTone)}
+        notificationsRef={notificationsRef}
+        showNotifications={showNotifications}
+        setShowNotifications={setShowNotifications}
+        setShowHelp={setShowHelp}
+        onLogout={handleLogout}
       >
         <div className="shell-page-wrap space-y-8">
           <div className="flex justify-between items-end">
@@ -224,8 +153,8 @@ function DashboardPage() {
                 {chart.map((item, idx) => (
                   <div className="flex flex-col items-center gap-3 w-full" key={item.key}>
                     <div className="w-8 flex flex-col gap-1 items-center justify-end h-full">
-                      <div className="w-full bg-tertiary-fixed-dim rounded-t-sm" style={{ height: `${topHeights[idx]}%` }}></div>
-                      <div className="w-full bg-primary-container" style={{ height: `${bottomHeights[idx]}%` }}></div>
+                      <div className="w-full bg-tertiary-fixed-dim rounded-t-sm" style={{ height: `${chartHeights[idx].topHeight}%` }}></div>
+                      <div className="w-full bg-primary-container" style={{ height: `${chartHeights[idx].bottomHeight}%` }}></div>
                     </div>
                     <span className="text-[10px] font-medium text-slate-400">{item.label}</span>
                   </div>

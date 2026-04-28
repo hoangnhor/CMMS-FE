@@ -6,36 +6,15 @@ import { listAssetsApi } from "../../services/asset.api";
 import { listWorkOrdersApi } from "../../services/workOrder.api";
 import { createPmScheduleApi, listPmSchedulesApi } from "../../services/maintenance.api";
 import { subscribeRealtime } from "../../services/realtime";
+import {
+  PAGE_SIZE,
+  buildDueByAsset,
+  buildScheduleSearchText,
+  buildScheduleStatus,
+  mapIntervalLabel,
+  toDisplayDate,
+} from "./helpers";
 import "./style.css";
-
-const PAGE_SIZE = 12;
-
-function mapIntervalLabel(triggerType, intervalValue) {
-  if (triggerType === "hours") return `${intervalValue} giờ`;
-  if (triggerType === "days") return `${intervalValue} ngày`;
-  if (triggerType === "shots") return `${intervalValue.toLocaleString("vi-VN")} shot`;
-  if (triggerType === "usage_count") return `${intervalValue} lần`;
-  return String(intervalValue || "-");
-}
-
-function toDisplayDate(value) {
-  if (!value) return "-";
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "-";
-  return date.toLocaleDateString("vi-VN");
-}
-
-function calcDayDiff(value) {
-  if (!value) return null;
-  const due = new Date(value);
-  if (Number.isNaN(due.getTime())) return null;
-
-  const today = new Date();
-  const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-  const dueStart = new Date(due.getFullYear(), due.getMonth(), due.getDate());
-
-  return Math.round((dueStart.getTime() - todayStart.getTime()) / 86400000);
-}
 
 function MaintenancePage() {
   const user = useAuthStore((state) => state.user);
@@ -136,70 +115,19 @@ function MaintenancePage() {
   const filteredSchedules = useMemo(() => {
     const keyword = search.trim().toLowerCase();
     if (!keyword) return schedules;
-    return schedules.filter((item) => {
-      const text = [item.assetId?.assetCode, item.assetId?.name, item.assetId?.assetType, item.triggerType]
-        .filter(Boolean)
-        .join(" ")
-        .toLowerCase();
-      return text.includes(keyword);
-    });
+    return schedules.filter((item) => buildScheduleSearchText(item).includes(keyword));
   }, [schedules, search]);
 
-  const dueByAsset = useMemo(() => {
-    const map = new Map();
-    workOrders.forEach((wo) => {
-      if (["done", "rejected"].includes(wo.status)) return;
-      if (!wo.assetId?._id || !wo.scheduledDate) return;
-      const due = new Date(wo.scheduledDate);
-      if (Number.isNaN(due.getTime())) return;
-
-      const key = String(wo.assetId._id);
-      const prev = map.get(key);
-      if (!prev || due.getTime() < prev.getTime()) {
-        map.set(key, due);
-      }
-    });
-    return map;
-  }, [workOrders]);
+  const dueByAsset = useMemo(() => buildDueByAsset(workOrders), [workOrders]);
 
   const scheduleRows = useMemo(() => {
     return filteredSchedules.map((item) => {
       const dueDate = dueByAsset.get(String(item.assetId?._id));
-      const dayDiff = calcDayDiff(dueDate);
-
-      let statusTone = "bg-surface-container text-on-surface-variant";
-      let statusDot = "bg-slate-400";
-      let statusLabel = item.isActive ? "Đang hoạt động" : "Tạm dừng";
-
-      if (dayDiff !== null) {
-        if (dayDiff < 0) {
-          statusTone = "bg-error-container text-error";
-          statusDot = "bg-error";
-          statusLabel = `Quá hạn ${Math.abs(dayDiff)} ngày`;
-        } else if (dayDiff === 0) {
-          statusTone = "bg-amber-100 text-amber-700";
-          statusDot = "bg-amber-500";
-          statusLabel = "Hôm nay";
-        } else {
-          statusTone = "bg-surface-container text-on-surface-variant";
-          statusDot = "bg-slate-400";
-          statusLabel = `Còn ${dayDiff} ngày`;
-        }
-      } else if (item.isActive) {
-        statusTone = "bg-[#dcfce7] text-[#166534]";
-        statusDot = "bg-[#4ade80]";
-      } else {
-        statusTone = "bg-slate-200 text-slate-700";
-        statusDot = "bg-slate-400";
-      }
 
       return {
         ...item,
         dueDate,
-        dayDiff,
-        statusTone,
-        statusDot,
-        statusLabel,
+        ...buildScheduleStatus(item, dueDate),
       };
     });
   }, [filteredSchedules, dueByAsset]);
@@ -292,20 +220,20 @@ function MaintenancePage() {
   return (
     <>
       <AppShell
-      currentKey="maintenance"
-      user={user}
-      search={search}
-      onSearchChange={(value) => {
-        setSearch(value);
-        setPage(1);
-      }}
-      searchPlaceholder="Tìm kiếm tài sản, mã số hoặc vị trí..."
-      notifications={notifications}
-      notificationsRef={notificationsRef}
-      showNotifications={showNotifications}
-      setShowNotifications={setShowNotifications}
-      setShowHelp={setShowHelp}
-      onLogout={handleLogout}
+        currentKey="maintenance"
+        user={user}
+        search={search}
+        onSearchChange={(value) => {
+          setSearch(value);
+          setPage(1);
+        }}
+        searchPlaceholder="Tìm kiếm tài sản, mã số hoặc vị trí..."
+        notifications={notifications}
+        notificationsRef={notificationsRef}
+        showNotifications={showNotifications}
+        setShowNotifications={setShowNotifications}
+        setShowHelp={setShowHelp}
+        onLogout={handleLogout}
       >
         <div className="shell-page-wrap space-y-8">
           {notice.text ? (

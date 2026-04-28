@@ -1,16 +1,13 @@
-import api from "./api";
+import { get, patch, post } from "./http";
 
 export async function listUsersApi(params = {}) {
-  const response = await api.get("/users", { params });
-  return response.data;
+  return get("/users", { params });
 }
 
 export async function createUserApi(payload) {
-  const response = await api.post("/users", payload);
-  return response.data;
+  return post("/users", payload);
 }
 
 export async function updateUserStatusApi(id, payload) {
-  const response = await api.patch(`/users/${id}/status`, payload);
-  return response.data;
+  return patch(`/users/${id}/status`, payload);
 }
