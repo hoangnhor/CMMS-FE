@@ -45,25 +45,29 @@ export function useAuth() {
     hydrateStore();
   }, [hydrateStore]);
 
-  const submit = useCallback(async () => {
+  const submit = useCallback(async (override = null) => {
+    const email = override?.email ?? form.email;
+    const password = override?.password ?? form.password;
+    const rememberValue = override?.remember ?? remember;
+
     try {
       setLoading(true);
       setError("");
 
       const result = await loginApi({
-        email: form.email.trim(),
-        password: form.password,
+        email: email.trim(),
+        password,
       });
 
       if (!result?.success || !result?.data?.token) {
         throw new Error(result?.message || "Đăng nhập thất bại");
       }
 
-      if (remember) {
+      if (rememberValue) {
         localStorage.setItem(
           REMEMBER_CREDENTIALS_KEY,
           JSON.stringify({
-            email: form.email.trim(),
+            email: email.trim(),
             remember: true,
           })
         );
@@ -71,7 +75,7 @@ export function useAuth() {
         localStorage.removeItem(REMEMBER_CREDENTIALS_KEY);
       }
 
-      setAuth({ token: result.data.token, user: result.data.user, remember });
+      setAuth({ token: result.data.token, user: result.data.user, remember: rememberValue });
       return true;
     } catch (err) {
       const message =

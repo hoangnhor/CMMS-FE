@@ -4,6 +4,37 @@ import { useAuth } from "../../hooks/useAuth";
 import heroImage from "../../assets/hero.png";
 import "./style.css";
 
+const QUICK_ACCOUNTS = [
+  {
+    label: "Admin",
+    role: "Toàn quyền",
+    email: "admin@factory.local",
+    password: "password123",
+    icon: "shield_person",
+  },
+  {
+    label: "Manager",
+    role: "Site Manager",
+    email: "manager@factory.local",
+    password: "password123",
+    icon: "factory",
+  },
+  {
+    label: "Technician",
+    role: "Technician",
+    email: "tech1@factory.local",
+    password: "password123",
+    icon: "build_circle",
+  },
+  {
+    label: "Accountant",
+    role: "Accountant",
+    email: "accountant@factory.local",
+    password: "password123",
+    icon: "account_balance_wallet",
+  },
+];
+
 function SignInPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [supportNotice, setSupportNotice] = useState("");
@@ -37,6 +68,19 @@ function SignInPage() {
   const handleSubmit = async (event) => {
     event.preventDefault();
     await submit();
+  };
+
+  const quickLogin = async (account) => {
+    clearError();
+    setSupportNotice("");
+    setField("email", account.email);
+    setField("password", account.password);
+    setRemember(true);
+    await submit({
+      email: account.email,
+      password: account.password,
+      remember: true,
+    });
   };
 
   const openSupportNotice = (event) => {
@@ -100,9 +144,9 @@ function SignInPage() {
           </div>
         </section>
 
-        <section className="w-full lg:w-1/2 flex flex-col justify-center items-center p-6 md:p-12 lg:p-24 bg-surface-container-lowest">
+        <section className="w-full lg:w-1/2 flex flex-col justify-start items-center p-6 pt-6 md:p-12 md:pt-8 lg:p-24 lg:pt-10 bg-surface-container-lowest">
           <div className="w-full max-w-md">
-            <div className="lg:hidden mb-12 flex items-center gap-3">
+            <div className="lg:hidden mb-8 flex items-center gap-3">
               <span
                 className="material-symbols-outlined text-primary-container text-3xl"
                 style={{ fontVariationSettings: "'FILL' 1" }}
@@ -114,7 +158,7 @@ function SignInPage() {
               </h1>
             </div>
 
-            <div className="mb-10">
+            <div className="mb-6">
               <h2 className="text-3xl font-bold text-primary tracking-tight mb-2">
                 Đăng nhập hệ thống
               </h2>
@@ -123,7 +167,43 @@ function SignInPage() {
               </p>
             </div>
 
-            <form className="space-y-6" onSubmit={handleSubmit}>
+            <div className="mb-8">
+              <div className="mb-3 flex items-center justify-between">
+                <h3 className="text-xs font-semibold uppercase tracking-wider text-on-surface-variant">
+                  Tài khoản truy cập nhanh
+                </h3>
+                <span className="text-[11px] text-outline">1 chạm để đăng nhập</span>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
+                {QUICK_ACCOUNTS.map((account) => (
+                  <button
+                    key={account.email}
+                    type="button"
+                    className="rounded-md border border-surface-container bg-surface px-2 py-1.5 text-left transition-colors hover:border-tertiary-fixed-dim hover:bg-surface-container-low disabled:opacity-60"
+                    onClick={() => quickLogin(account)}
+                    disabled={loading}
+                  >
+                    <div className="flex items-start gap-1.5">
+                      <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-primary-container/10 text-primary-container">
+                        <span className="material-symbols-outlined text-[15px]">{account.icon}</span>
+                      </div>
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-1.5">
+                          <p className="text-[11px] font-bold text-primary leading-none">{account.label}</p>
+                          <span className="rounded-full bg-surface-container-low px-1 py-0.5 text-[7px] font-semibold uppercase tracking-wider text-on-surface-variant">
+                            {account.role}
+                          </span>
+                        </div>
+                        <p className="mt-0.5 text-[10px] text-on-surface leading-snug">{account.name}</p>
+                        <p className="truncate text-[9px] text-on-surface-variant">{account.email}</p>
+                      </div>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <form className="space-y-4" onSubmit={handleSubmit}>
               <div className="space-y-2">
                 <label className="text-xs font-semibold uppercase tracking-wider text-on-surface-variant ml-1" htmlFor="email">
                   Email
@@ -236,7 +316,7 @@ function SignInPage() {
               </button>
             </form>
 
-            <div className="mt-16 pt-8 border-t border-surface-container flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="mt-8 pt-4 border-t border-surface-container flex flex-col md:flex-row md:items-center justify-between gap-3">
               <div className="flex items-center gap-2 text-xs text-on-surface-variant">
                 <span className="material-symbols-outlined text-[16px]">support_agent</span>
                 <span>Hỗ trợ kỹ thuật: 1900 6789</span>

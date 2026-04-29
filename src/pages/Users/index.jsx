@@ -1,195 +1,42 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import AppShell from "../../components/layout/AppShell";
-import { useAuthStore } from "../../store/authStore";
-import { createUserApi, listUsersApi, updateUserStatusApi } from "../../services/user.api";
-import { subscribeRealtime } from "../../services/realtime";
 import { getInitials } from "../../utils/userDisplay";
+import { PAGE_SIZE, mapRoleText, mapRoleTone } from "./helpers";
+import { useUsersPage } from "./useUsersPage";
 import "./style.css";
 
-const PAGE_SIZE = 12;
-
-function mapRoleText(role) {
-  if (role === "admin") return "Quản trị viên";
-  if (role === "site_manager") return "Quản lý";
-  if (role === "technician") return "Kỹ thuật viên";
-  if (role === "accountant") return "Kế toán";
-  return role || "-";
-}
-
-function mapRoleTone(role) {
-  if (role === "admin") return "bg-[#4edea3]/20 text-[#005236]";
-  if (role === "site_manager") return "bg-primary-container text-white";
-  if (role === "technician") return "bg-surface-container-high text-on-surface";
-  return "bg-amber-100 text-amber-700";
-}
-
 function UsersPage() {
-  const user = useAuthStore((state) => state.user);
-  const logout = useAuthStore((state) => state.logout);
-  const navigate = useNavigate();
-  const isAdmin = user?.role === "admin";
-
-  const [users, setUsers] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-  const [notice, setNotice] = useState({ type: "", text: "" });
-  const [search, setSearch] = useState("");
-  const [showNotifications, setShowNotifications] = useState(false);
-  const [showHelp, setShowHelp] = useState(false);
-  const notificationsRef = useRef(null);
-
-  const [form, setForm] = useState({
-    name: "",
-    email: "",
-    password: "",
-    role: "technician",
-  });
-  const [formError, setFormError] = useState("");
-  const [formLoading, setFormLoading] = useState(false);
-  const [toggleLoadingId, setToggleLoadingId] = useState("");
-  const [page, setPage] = useState(1);
-
-  const showNotice = (type, text) => setNotice({ type, text });
-
-  const loadUsers = useCallback(async ({ silent = false } = {}) => {
-    if (!isAdmin) {
-      setUsers([]);
-      setError("");
-      setLoading(false);
-      return;
-    }
-    try {
-      if (!silent) setLoading(true);
-      setError("");
-      const res = await listUsersApi();
-      setUsers(Array.isArray(res?.data) ? res.data : []);
-    } catch (err) {
-      setError(err?.response?.data?.message || err?.message || "Không tải được danh sách người dùng");
-      setUsers([]);
-    } finally {
-      if (!silent) setLoading(false);
-    }
-  }, [isAdmin]);
-
-  useEffect(() => {
-    Promise.resolve().then(() => {
-      loadUsers();
-    });
-  }, [loadUsers]);
-
-  useEffect(() => {
-    let timeoutId = null;
-    const onChanged = () => {
-      if (timeoutId) return;
-      timeoutId = setTimeout(() => {
-        timeoutId = null;
-        loadUsers({ silent: true });
-      }, 250);
-    };
-    const unsub = subscribeRealtime(["user.changed"], onChanged);
-    return () => {
-      unsub();
-      if (timeoutId) clearTimeout(timeoutId);
-    };
-  }, [loadUsers]);
-
-  useEffect(() => {
-    const onClickOutside = (event) => {
-      if (showNotifications && notificationsRef.current && !notificationsRef.current.contains(event.target)) {
-        setShowNotifications(false);
-      }
-    };
-    document.addEventListener("mousedown", onClickOutside);
-    return () => document.removeEventListener("mousedown", onClickOutside);
-  }, [showNotifications]);
-
-  const filteredUsers = useMemo(() => {
-    const keyword = search.trim().toLowerCase();
-    if (!keyword) return users;
-    return users.filter((item) => [item.name, item.email, item.role].filter(Boolean).join(" ").toLowerCase().includes(keyword));
-  }, [users, search]);
-
-  const totalPages = Math.max(1, Math.ceil(filteredUsers.length / PAGE_SIZE));
-  const safePage = Math.min(page, totalPages);
-  const pagedUsers = filteredUsers.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
-
-  const goPage = (value) => {
-    const next = Math.max(1, Math.min(totalPages, value));
-    setPage(next);
-  };
-
-  const roleStats = useMemo(() => ({
-    technician: users.filter((item) => item.role === "technician").length,
-    manager: users.filter((item) => item.role === "site_manager").length,
-    admin: users.filter((item) => item.role === "admin").length,
-    accountant: users.filter((item) => item.role === "accountant").length,
-  }), [users]);
-
-  const notifications = useMemo(() => {
-    const rows = [];
-    const inactiveCount = users.filter((item) => !item.isActive).length;
-    if (inactiveCount > 0) {
-      rows.push({ id: "inactive", tone: "bg-amber-50 text-amber-700", text: `Có ${inactiveCount} người dùng đang bị khóa.` });
-    }
-    if (users.length > 0) {
-      rows.push({ id: "total", tone: "bg-blue-50 text-blue-700", text: `Tổng cộng ${users.length} tài khoản trong hệ thống.` });
-    }
-    return rows;
-  }, [users]);
-
-  const handleLogout = (event) => {
-    event.preventDefault();
-    logout();
-    navigate("/auth", { replace: true });
-  };
-
-  const createUser = async () => {
-    if (!isAdmin) {
-      showNotice("error", "Bạn không có quyền tạo người dùng.");
-      return;
-    }
-    if (!form.name.trim() || !form.email.trim() || !form.password.trim()) {
-      setFormError("Vui lòng nhập đầy đủ họ tên, email và mật khẩu.");
-      return;
-    }
-    try {
-      setFormError("");
-      setFormLoading(true);
-      await createUserApi({
-        name: form.name.trim(),
-        email: form.email.trim(),
-        password: form.password,
-        role: form.role,
-      });
-      setForm({ name: "", email: "", password: "", role: "technician" });
-      await loadUsers({ silent: true });
-      showNotice("success", "Đã tạo người dùng mới.");
-    } catch (err) {
-      setFormError(err?.response?.data?.message || err?.message || "Tạo người dùng thất bại.");
-    } finally {
-      setFormLoading(false);
-    }
-  };
-
-  const toggleUserStatus = async (target) => {
-    if (!isAdmin) {
-      showNotice("error", "Bạn không có quyền cập nhật trạng thái người dùng.");
-      return;
-    }
-    try {
-      setToggleLoadingId(target._id);
-      await updateUserStatusApi(target._id, { isActive: !target.isActive });
-      await loadUsers({ silent: true });
-      showNotice("success", "Đã cập nhật trạng thái người dùng.");
-    } catch (err) {
-      showNotice("error", err?.response?.data?.message || err?.message || "Cập nhật trạng thái thất bại.");
-    } finally {
-      setToggleLoadingId("");
-    }
-  };
-
-  const totalUsers = users.length;
+  const {
+    user,
+    isAdmin,
+    loading,
+    error,
+    notice,
+    setNotice,
+    search,
+    setSearch,
+    showNotifications,
+    setShowNotifications,
+    showHelp,
+    setShowHelp,
+    notificationsRef,
+    form,
+    setForm,
+    formError,
+    formLoading,
+    toggleLoadingId,
+    filteredUsers,
+    safePage,
+    totalPages,
+    pagedUsers,
+    goPage,
+    roleStats,
+    notifications,
+    handleLogout,
+    createUser,
+    toggleUserStatus,
+    totalUsers,
+    setPage,
+  } = useUsersPage();
 
   return (
     <>

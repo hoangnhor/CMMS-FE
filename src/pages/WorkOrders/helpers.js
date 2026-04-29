@@ -99,3 +99,135 @@ export function buildCreateWorkOrderForm() {
     scheduledDate: "",
   };
 }
+
+export function buildEditWorkOrderModal(item = null) {
+  return {
+    open: false,
+    loading: false,
+    error: "",
+    item,
+    form: {
+      assetId: item?.assetId?._id || item?.assetId || "",
+      woType: item?.woType || "CM",
+      triggerSource: item?.triggerSource || "production_request",
+      priority: item?.priority || "medium",
+      scheduledDate: toInputDate(item?.scheduledDate),
+    },
+  };
+}
+
+export function buildSubmitModal(item = null) {
+  return { open: false, loading: false, error: "", item };
+}
+
+export function buildApproveModal(item = null, assignedTo = "") {
+  return { open: false, loading: false, error: "", item, assignedTo };
+}
+
+export function buildRejectModal(item = null) {
+  return { open: false, loading: false, error: "", item, reason: item?.rejectedReason || "" };
+}
+
+export function buildCompleteModal(item = null) {
+  return {
+    open: false,
+    loading: false,
+    error: "",
+    item,
+    laborHours: String(item?.laborHours ?? 0),
+    findings: "",
+  };
+}
+
+export function buildSmartFilters() {
+  return {
+    priority: "",
+    woType: "",
+    triggerSource: "",
+    onlyMine: false,
+    overdueOnly: false,
+    actionableOnly: false,
+  };
+}
+
+export function buildWorkOrderSearchText(item) {
+  return [
+    item.woCode,
+    item.assetId?.assetCode,
+    item.assetId?.name,
+    item.assignedTo?.name,
+    item.createdBy?.name,
+  ]
+    .filter(Boolean)
+    .join(" ")
+    .toLowerCase();
+}
+
+export function filterWorkOrders(workOrders, { search, smartFilters, user }) {
+  const keyword = search.trim().toLowerCase();
+  const now = Date.now();
+
+  return workOrders.filter((item) => {
+    if (keyword && !buildWorkOrderSearchText(item).includes(keyword)) return false;
+    if (smartFilters.priority && item.priority !== smartFilters.priority) return false;
+    if (smartFilters.woType && item.woType !== smartFilters.woType) return false;
+    if (smartFilters.triggerSource && item.triggerSource !== smartFilters.triggerSource) return false;
+
+    if (smartFilters.onlyMine) {
+      const mine = String(user?._id || "");
+      const creator = String(item.createdBy?._id || item.createdBy || "");
+      const assignee = String(item.assignedTo?._id || item.assignedTo || "");
+      if (mine !== creator && mine !== assignee) return false;
+    }
+
+    if (smartFilters.overdueOnly) {
+      const due = item?.scheduledDate ? new Date(item.scheduledDate).getTime() : null;
+      if (!due || Number.isNaN(due) || due >= now) return false;
+      if (["done", "rejected"].includes(item.status)) return false;
+    }
+
+    if (smartFilters.actionableOnly) {
+      const hasAction = canEdit(user, item)
+        || canApprove(user, item)
+        || canStart(user, item)
+        || canComplete(user, item)
+        || canSignOff(user, item);
+      if (!hasAction) return false;
+    }
+
+    return true;
+  });
+}
+
+export function buildWorkOrderStats(workOrders) {
+  const inProgress = workOrders.filter((item) => item.status === "in_progress").length;
+  const pending = workOrders.filter((item) => item.status === "pending_approval").length;
+  const done = workOrders.filter((item) => item.status === "done").length;
+  const urgentOpen = workOrders.filter((item) => item.priority === "urgent" && !["done", "rejected"].includes(item.status)).length;
+  const doneRate = workOrders.length ? Math.round((done / workOrders.length) * 100) : 0;
+  const todayNew = workOrders.filter((item) => {
+    const createdLikeDate = new Date(item._id?.toString().slice(0, 8).replace(/(..)(..)(..)(..)/, "$1-$2-$3-$4"));
+    return !Number.isNaN(createdLikeDate.getTime()) && createdLikeDate.toDateString() === new Date().toDateString();
+  }).length;
+
+  return { inProgress, pending, doneRate, urgentOpen, todayNew };
+}
+
+export function buildWorkOrderNotifications(stats) {
+  const rows = [];
+  if (stats.pending > 0) rows.push({ id: "pending", tone: "bg-amber-50 text-amber-700", text: `Có ${stats.pending} lệnh đang chờ phê duyệt.` });
+  if (stats.urgentOpen > 0) rows.push({ id: "urgent", tone: "bg-red-50 text-red-700", text: `Có ${stats.urgentOpen} lệnh khẩn cấp đang mở.` });
+  if (stats.inProgress > 0) rows.push({ id: "running", tone: "bg-emerald-50 text-emerald-700", text: `${stats.inProgress} lệnh đang thực hiện.` });
+  return rows;
+}
+
+export function countActiveSmartFilters(smartFilters) {
+  let count = 0;
+  if (smartFilters.priority) count += 1;
+  if (smartFilters.woType) count += 1;
+  if (smartFilters.triggerSource) count += 1;
+  if (smartFilters.onlyMine) count += 1;
+  if (smartFilters.overdueOnly) count += 1;
+  if (smartFilters.actionableOnly) count += 1;
+  return count;
+}
