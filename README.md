@@ -1,8 +1,16 @@
-# Frontend - Asset Management
+# Asset Management Frontend (CMMS)
 
-Ứng dụng React + Vite cho hệ thống quản lý tài sản và bảo trì.
+Frontend cho hệ thống quản lý tài sản, bảo trì và Work Order trong môi trường nhà máy.
 
-## Công nghệ
+## Highlights
+
+- Role-based UI (admin, site_manager, technician, accountant)
+- Realtime dashboard + realtime refresh từ Socket.IO events
+- Product-scale list handling: server-side pagination + debounced search
+- Smart filters, export CSV, sticky table header, loading/empty states chuẩn hóa
+- Auth session management với Zustand (remember me + auto logout khi 401)
+
+## Tech Stack
 
 - React 19
 - Vite 8
@@ -10,71 +18,103 @@
 - Zustand
 - Axios
 - Socket.IO Client
+- Tailwind CSS 4
 
-## Yêu cầu
+## Core Modules
 
-- Node.js >= 18
-- npm >= 9
+- `/auth`: đăng nhập
+- `/dashboard`: KPI vận hành, chart 7 ngày, cảnh báo gần hạn/quá hạn
+- `/assets`: quản lý tài sản, lọc nâng cao, CRUD theo quyền
+- `/work-orders`: vòng đời Work Order (draft -> submit -> approve/reject -> in_progress -> done -> sign-off)
+- `/maintenance`: quản lý lịch PM, theo dõi due status
+- `/users`: quản lý người dùng (admin)
 
-## Cài đặt
+## UX/Product Improvements
 
-```bash
-npm install
+- Debounced search `300ms`
+- Server-side pagination cho list lớn
+- Sticky table headers cho bảng chính
+- Unified table states (loading / empty / error style)
+- KPI skeleton loading cards
+- Notice auto-dismiss
+
+## Project Structure
+
+```text
+src/
+  components/
+    layout/               # App shell + route guard
+    ui/                   # shared UI states/skeleton
+  hooks/                  # custom hooks (dashboard, debounce, ...)
+  pages/                  # feature pages
+  services/               # API + realtime integration
+  store/                  # Zustand auth store
+  utils/                  # helpers/parsers
 ```
 
-## Biến môi trường
+## Environment
 
-Tạo file `.env` trong thư mục `frontend`:
+Tạo `frontend/.env`:
 
 ```env
 VITE_API_BASE_URL=http://localhost:5000/api
 ```
 
-Lưu ý:
-- Build production bắt buộc phải có `VITE_API_BASE_URL`.
-- Hệ thống tự normalize base URL để luôn có hậu tố `/api`.
+Notes:
+- Production build yêu cầu `VITE_API_BASE_URL`.
+- App tự normalize base URL để luôn có hậu tố `/api`.
 
-## Chạy local
+## Local Setup
 
 ```bash
+npm install
 npm run dev
 ```
 
-Mặc định FE chạy tại `http://localhost:5173`.
+Mặc định chạy tại `http://localhost:5173`.
 
-## Build production
+## Build
 
 ```bash
 npm run build
 npm run preview
 ```
 
-## Lint
+## Quality
 
 ```bash
 npm run lint
 ```
 
-## Cấu trúc chính
+## Realtime Integration
 
-```text
-src/
-  components/layout/      # Layout và route guard
-  pages/                  # Các màn hình chính
-  services/               # API client, realtime
-  store/                  # Zustand store
-  utils/                  # helper xử lý base URL, format
+Client subscribe các event chính:
+
+- `asset.changed`
+- `work_order.changed`
+- `pm_schedule.changed`
+- `maintenance_log.changed`
+- `user.changed`
+
+Realtime socket dùng cùng backend host (resolve từ `VITE_API_BASE_URL`).
+
+## API Contract Notes
+
+List endpoints hỗ trợ dạng response phân trang:
+
+```json
+{
+  "success": true,
+  "data": {
+    "items": [],
+    "pagination": {
+      "page": 1,
+      "limit": 20,
+      "total": 500,
+      "totalPages": 25
+    }
+  }
+}
 ```
 
-## Các màn hình
-
-- `/auth`: đăng nhập
-- `/dashboard`: tổng quan
-- `/assets`: quản lý tài sản
-- `/work-orders`: quản lý work order
-- `/maintenance`: kế hoạch bảo trì PM
-- `/users`: quản lý người dùng (admin)
-
-## Realtime
-
-Frontend kết nối Socket.IO qua `src/services/realtime.js`, dùng cùng host backend (lấy từ API base URL).
+Assets API trả thêm `summary` để render KPI chính xác ở FE.
