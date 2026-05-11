@@ -17,6 +17,8 @@ import {
   mapNotificationTone,
 } from "./helpers";
 import { buildAssetPageActions } from "./actions";
+import { normalizeListResponse } from "../../utils/listResponse";
+import { useDebouncedValue } from "../../hooks/useDebouncedValue";
 
 export function useAssetsPage() {
   const user = useAuthStore((state) => state.user);
@@ -31,6 +33,9 @@ export function useAssetsPage() {
   const [typeFilter, setTypeFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
+  const [summary, setSummary] = useState({ active: 0, in_repair: 0, idle: 0 });
   const [showNotifications, setShowNotifications] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
   const [showAdvancedFilter, setShowAdvancedFilter] = useState(false);
@@ -46,20 +51,51 @@ export function useAssetsPage() {
   const [editForm, setEditForm] = useState(buildEditAssetForm);
   const [advancedFilters, setAdvancedFilters] = useState(buildAdvancedFilters);
   const notificationsRef = useRef(null);
+  const debouncedSearch = useDebouncedValue(search, 300);
 
   const loadAssets = useCallback(async ({ silent = false } = {}) => {
     try {
       if (!silent) setLoading(true);
       setError("");
-      const res = await listAssetsApi();
-      setAssets(Array.isArray(res?.data) ? res.data : []);
+      const keyword = debouncedSearch.trim();
+      const res = await listAssetsApi({
+        paginated: true,
+        page,
+        limit: PAGE_SIZE,
+        assetType: typeFilter || undefined,
+        status: statusFilter || undefined,
+        keyword: keyword || undefined,
+      });
+      const { items, pagination } = normalizeListResponse(res);
+      setAssets(items);
+      if (pagination) {
+        setTotalPages(pagination.totalPages || 1);
+        setTotalItems(pagination.total || 0);
+        const summaryData = res?.data?.summary || {};
+        setSummary({
+          active: Number(summaryData.active) || 0,
+          in_repair: Number(summaryData.in_repair) || 0,
+          idle: Number(summaryData.idle) || 0,
+        });
+      } else {
+        setTotalPages(1);
+        setTotalItems(items.length);
+        setSummary({
+          active: items.filter((item) => item.status === "active").length,
+          in_repair: items.filter((item) => item.status === "in_repair").length,
+          idle: items.filter((item) => item.status === "idle").length,
+        });
+      }
     } catch (err) {
       setError(err?.response?.data?.message || err?.message || "Không tải được dữ liệu tài sản");
       setAssets([]);
+      setTotalPages(1);
+      setTotalItems(0);
+      setSummary({ active: 0, in_repair: 0, idle: 0 });
     } finally {
       if (!silent) setLoading(false);
     }
-  }, []);
+  }, [page, debouncedSearch, typeFilter, statusFilter]);
 
   useEffect(() => {
     Promise.resolve().then(() => {
@@ -68,17 +104,16 @@ export function useAssetsPage() {
   }, [loadAssets]);
 
   const filteredAssets = useMemo(() => {
-    return filterAssets(assets, { search, typeFilter, statusFilter, advancedFilters });
-  }, [assets, search, typeFilter, statusFilter, advancedFilters]);
+    return filterAssets(assets, { search: "", typeFilter: "", statusFilter: "", advancedFilters });
+  }, [assets, advancedFilters]);
 
-  const totalPages = Math.max(1, Math.ceil(filteredAssets.length / PAGE_SIZE));
   const safePage = Math.min(page, totalPages);
-  const pagedAssets = filteredAssets.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
+  const pagedAssets = filteredAssets;
 
-  const totalAssets = assets.length;
-  const activeAssets = assets.filter((item) => item.status === "active").length;
-  const repairAssets = assets.filter((item) => item.status === "in_repair").length;
-  const idleAssets = assets.filter((item) => item.status === "idle").length;
+  const totalAssets = totalItems;
+  const activeAssets = summary.active;
+  const repairAssets = summary.in_repair;
+  const idleAssets = summary.idle;
 
   const notifications = useMemo(() => {
     return buildAssetNotifications({ activeAssets, repairAssets, idleAssets }).map(mapNotificationTone);
@@ -156,6 +191,16 @@ export function useAssetsPage() {
     };
   }, [loadAssets]);
 
+  useEffect(() => {
+    setPage(1);
+  }, [debouncedSearch, typeFilter, statusFilter]);
+
+  useEffect(() => {
+    if (!notice.text) return undefined;
+    const timer = setTimeout(() => setNotice({ type: "", text: "" }), 3500);
+    return () => clearTimeout(timer);
+  }, [notice.text]);
+
   const {
     openCreateModal,
     closeCreateModal,
@@ -222,6 +267,7 @@ export function useAssetsPage() {
     notificationsRef,
     notifications,
     filteredAssets,
+    totalItems,
     pageSize: PAGE_SIZE,
     safePage,
     totalPages,

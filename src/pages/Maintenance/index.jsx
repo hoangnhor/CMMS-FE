@@ -15,6 +15,8 @@ import {
   toDisplayDate,
 } from "./helpers";
 import "./style.css";
+import TableStateRow from "../../components/ui/TableStateRow";
+import { useDebouncedValue } from "../../hooks/useDebouncedValue";
 
 function MaintenancePage() {
   const user = useAuthStore((state) => state.user);
@@ -42,6 +44,7 @@ function MaintenancePage() {
     intervalValue: "30",
     isActive: true,
   });
+  const debouncedSearch = useDebouncedValue(search, 300);
 
   const showNotice = (type, text) => setNotice({ type, text });
 
@@ -113,10 +116,10 @@ function MaintenancePage() {
   }, [showNotifications]);
 
   const filteredSchedules = useMemo(() => {
-    const keyword = search.trim().toLowerCase();
+    const keyword = debouncedSearch.trim().toLowerCase();
     if (!keyword) return schedules;
     return schedules.filter((item) => buildScheduleSearchText(item).includes(keyword));
-  }, [schedules, search]);
+  }, [schedules, debouncedSearch]);
 
   const dueByAsset = useMemo(() => buildDueByAsset(workOrders), [workOrders]);
 
@@ -217,6 +220,12 @@ function MaintenancePage() {
     navigate("/auth", { replace: true });
   };
 
+  useEffect(() => {
+    if (!notice.text) return undefined;
+    const timer = setTimeout(() => setNotice({ type: "", text: "" }), 3500);
+    return () => clearTimeout(timer);
+  }, [notice.text]);
+
   return (
     <>
       <AppShell
@@ -301,11 +310,11 @@ function MaintenancePage() {
                 <table className="w-full text-left border-collapse">
                   <thead>
                     <tr className="bg-surface-container-low/50">
-                      <th className="px-8 py-4 text-[11px] font-bold uppercase tracking-widest text-on-surface-variant">Tài sản & Mã số</th>
-                      <th className="px-8 py-4 text-[11px] font-bold uppercase tracking-widest text-on-surface-variant">Loại & Tần suất</th>
-                      <th className="px-8 py-4 text-[11px] font-bold uppercase tracking-widest text-on-surface-variant">Ngày dự kiến</th>
-                      <th className="px-8 py-4 text-[11px] font-bold uppercase tracking-widest text-on-surface-variant">Trạng thái / Đếm ngược</th>
-                      <th className="px-8 py-4 text-[11px] font-bold uppercase tracking-widest text-on-surface-variant">Thao tác</th>
+                      <th className="sticky top-0 z-10 bg-surface-container-low/50 px-8 py-4 text-[11px] font-bold uppercase tracking-widest text-on-surface-variant">Tài sản & Mã số</th>
+                      <th className="sticky top-0 z-10 bg-surface-container-low/50 px-8 py-4 text-[11px] font-bold uppercase tracking-widest text-on-surface-variant">Loại & Tần suất</th>
+                      <th className="sticky top-0 z-10 bg-surface-container-low/50 px-8 py-4 text-[11px] font-bold uppercase tracking-widest text-on-surface-variant">Ngày dự kiến</th>
+                      <th className="sticky top-0 z-10 bg-surface-container-low/50 px-8 py-4 text-[11px] font-bold uppercase tracking-widest text-on-surface-variant">Trạng thái / Đếm ngược</th>
+                      <th className="sticky top-0 z-10 bg-surface-container-low/50 px-8 py-4 text-[11px] font-bold uppercase tracking-widest text-on-surface-variant">Thao tác</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-surface-container">
@@ -338,7 +347,8 @@ function MaintenancePage() {
                         </td>
                       </tr>
                     ))}
-                    {!loading && scheduleRows.length === 0 ? <tr><td className="px-8 py-8 text-center text-sm text-slate-500" colSpan="5">Không có kế hoạch phù hợp.</td></tr> : null}
+                    {loading ? <TableStateRow colSpan={5} type="loading" message="Đang tải kế hoạch bảo trì..." /> : null}
+                    {!loading && scheduleRows.length === 0 ? <TableStateRow colSpan={5} type="empty" message="Không có kế hoạch phù hợp." /> : null}
                   </tbody>
                 </table>
               </div>

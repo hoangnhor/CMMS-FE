@@ -1,4 +1,5 @@
 import { mapStatusLabel, mapTypeLabel, toCurrency } from "./helpers";
+import TableStateRow from "../../components/ui/TableStateRow";
 
 function AssetTable({
   loading,
@@ -7,7 +8,7 @@ function AssetTable({
   openViewModal,
   openEditModal,
   openDeleteModal,
-  filteredAssets,
+  totalItems,
   safePage,
   totalPages,
   pageSize,
@@ -18,13 +19,13 @@ function AssetTable({
       <table className="w-full text-left border-collapse">
         <thead className="bg-surface-container-low">
           <tr>
-            <th className="px-6 py-4 text-[10px] font-extrabold text-on-surface-variant uppercase tracking-widest">Mã tài sản</th>
-            <th className="px-6 py-4 text-[10px] font-extrabold text-on-surface-variant uppercase tracking-widest">Tên tài sản</th>
-            <th className="px-6 py-4 text-[10px] font-extrabold text-on-surface-variant uppercase tracking-widest">Loại</th>
-            <th className="px-6 py-4 text-[10px] font-extrabold text-on-surface-variant uppercase tracking-widest">Trạng thái</th>
-            <th className="px-6 py-4 text-[10px] font-extrabold text-on-surface-variant uppercase tracking-widest">Vị trí</th>
-            <th className="px-6 py-4 text-[10px] font-extrabold text-on-surface-variant uppercase tracking-widest text-right">Giá trị</th>
-            <th className="px-6 py-4 text-[10px] font-extrabold text-on-surface-variant uppercase tracking-widest text-center">Thao tác</th>
+            <th className="sticky top-0 z-10 bg-surface-container-low px-6 py-4 text-[10px] font-extrabold text-on-surface-variant uppercase tracking-widest">Mã tài sản</th>
+            <th className="sticky top-0 z-10 bg-surface-container-low px-6 py-4 text-[10px] font-extrabold text-on-surface-variant uppercase tracking-widest">Tên tài sản</th>
+            <th className="sticky top-0 z-10 bg-surface-container-low px-6 py-4 text-[10px] font-extrabold text-on-surface-variant uppercase tracking-widest">Loại</th>
+            <th className="sticky top-0 z-10 bg-surface-container-low px-6 py-4 text-[10px] font-extrabold text-on-surface-variant uppercase tracking-widest">Trạng thái</th>
+            <th className="sticky top-0 z-10 bg-surface-container-low px-6 py-4 text-[10px] font-extrabold text-on-surface-variant uppercase tracking-widest">Vị trí</th>
+            <th className="sticky top-0 z-10 bg-surface-container-low px-6 py-4 text-[10px] font-extrabold text-on-surface-variant uppercase tracking-widest text-right">Giá trị</th>
+            <th className="sticky top-0 z-10 bg-surface-container-low px-6 py-4 text-[10px] font-extrabold text-on-surface-variant uppercase tracking-widest text-center">Thao tác</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-slate-100">
@@ -60,17 +61,18 @@ function AssetTable({
               </tr>
             );
           })}
+          {loading ? (
+            <TableStateRow colSpan={7} type="loading" message="Đang tải dữ liệu tài sản..." />
+          ) : null}
           {!loading && pagedAssets.length === 0 ? (
-            <tr>
-              <td colSpan="7" className="px-6 py-8 text-center text-sm text-on-surface-variant">Không có tài sản phù hợp.</td>
-            </tr>
+            <TableStateRow colSpan={7} type="empty" message="Không có tài sản phù hợp." />
           ) : null}
         </tbody>
       </table>
 
       <div className="px-6 py-4 bg-surface-container-low flex justify-between items-center">
         <div className="text-xs text-on-surface-variant font-medium">
-          Hiển thị <span className="font-bold text-primary">{filteredAssets.length === 0 ? 0 : (safePage - 1) * pageSize + 1}-{Math.min(filteredAssets.length, safePage * pageSize)}</span> trong số <span className="font-bold text-primary">{filteredAssets.length}</span> tài sản
+          Hiển thị <span className="font-bold text-primary">{totalItems === 0 ? 0 : (safePage - 1) * pageSize + 1}-{Math.min(totalItems, safePage * pageSize)}</span> trong số <span className="font-bold text-primary">{totalItems}</span> tài sản
         </div>
         <div className="flex items-center gap-1">
           <button className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-surface-container-highest text-slate-400 transition-colors" onClick={() => goPage(1)} disabled={safePage === 1}><span className="material-symbols-outlined text-[18px]">first_page</span></button>

@@ -4,6 +4,7 @@ import AssetModals from "./AssetModals";
 import AssetTable from "./AssetTable";
 import { useAssetsPage } from "./useAssetsPage";
 import "./style.css";
+import KpiSkeletonCard from "../../components/ui/KpiSkeletonCard";
 
 function AssetsPage() {
   const navigate = useNavigate();
@@ -42,6 +43,7 @@ function AssetsPage() {
     notificationsRef,
     notifications,
     filteredAssets,
+    totalItems,
     pageSize,
     safePage,
     totalPages,
@@ -124,34 +126,45 @@ function AssetsPage() {
           ) : null}
 
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-            <div className="bg-white p-6 rounded-xl border border-slate-200/70 shadow-sm">
+            {loading ? (
+              <>
+                <KpiSkeletonCard />
+                <KpiSkeletonCard />
+                <KpiSkeletonCard />
+                <KpiSkeletonCard />
+              </>
+            ) : (
+              <>
+                <div className="bg-white p-6 rounded-xl border border-slate-200/70 shadow-sm">
               <div className="text-on-surface-variant text-[10px] font-bold uppercase tracking-widest mb-2">Tổng tài sản</div>
               <div className="flex items-end gap-3">
-                <span className="text-4xl font-bold text-primary tracking-tighter">{loading ? "..." : totalAssets.toLocaleString("vi-VN")}</span>
+                <span className="text-4xl font-bold text-primary tracking-tighter">{totalAssets.toLocaleString("vi-VN")}</span>
                 <span className="text-tertiary-fixed-dim text-xs font-bold mb-1">+0%</span>
               </div>
             </div>
             <div className="bg-white p-6 rounded-xl border border-slate-200/70 shadow-sm">
               <div className="text-on-surface-variant text-[10px] font-bold uppercase tracking-widest mb-2">Đang hoạt động</div>
               <div className="flex items-end gap-3">
-                <span className="text-4xl font-bold text-primary tracking-tighter">{loading ? "..." : activeAssets.toLocaleString("vi-VN")}</span>
+                <span className="text-4xl font-bold text-primary tracking-tighter">{activeAssets.toLocaleString("vi-VN")}</span>
                 <div className="w-2 h-2 rounded-full bg-tertiary-fixed-dim mb-2.5 shadow-[0_0_8px_rgba(78,222,163,0.6)]"></div>
               </div>
             </div>
             <div className="bg-white p-6 rounded-xl border border-slate-200/70 shadow-sm">
               <div className="text-on-surface-variant text-[10px] font-bold uppercase tracking-widest mb-2">Đang bảo trì</div>
               <div className="flex items-end gap-3">
-                <span className="text-4xl font-bold text-primary tracking-tighter">{loading ? "..." : repairAssets.toLocaleString("vi-VN")}</span>
+                <span className="text-4xl font-bold text-primary tracking-tighter">{repairAssets.toLocaleString("vi-VN")}</span>
                 <div className="w-2 h-2 rounded-full bg-amber-400 mb-2.5 shadow-[0_0_8px_rgba(251,191,36,0.6)]"></div>
               </div>
             </div>
             <div className="bg-white p-6 rounded-xl border border-slate-200/70 shadow-sm">
               <div className="text-on-surface-variant text-[10px] font-bold uppercase tracking-widest mb-2">Dừng máy</div>
               <div className="flex items-end gap-3">
-                <span className="text-4xl font-bold text-primary tracking-tighter">{loading ? "..." : idleAssets.toLocaleString("vi-VN")}</span>
+                <span className="text-4xl font-bold text-primary tracking-tighter">{idleAssets.toLocaleString("vi-VN")}</span>
                 <div className="w-2 h-2 rounded-full bg-error mb-2.5 shadow-[0_0_8px_rgba(186,26,26,0.6)]"></div>
               </div>
             </div>
+              </>
+            )}
           </div>
 
           <div className="bg-white rounded-xl p-4 mb-1 flex flex-wrap gap-4 items-center border border-slate-200/70 shadow-sm">
@@ -258,7 +271,7 @@ function AssetsPage() {
             openViewModal={openViewModal}
             openEditModal={openEditModal}
             openDeleteModal={openDeleteModal}
-            filteredAssets={filteredAssets}
+            totalItems={totalItems}
             safePage={safePage}
             totalPages={totalPages}
             pageSize={pageSize}

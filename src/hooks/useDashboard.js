@@ -2,6 +2,7 @@
 import { listAssetsApi } from "../services/asset.api";
 import { subscribeRealtime } from "../services/realtime";
 import { listWorkOrdersApi } from "../services/workOrder.api";
+import { normalizeListResponse } from "../utils/listResponse";
 
 const REALTIME_INTERVAL_MS = 15000;
 
@@ -29,11 +30,11 @@ function buildLast7Days() {
   return items;
 }
 
-function normalizeDashboard(assets, workOrders) {
-  const totalAssets = assets.length;
-  const activeAssets = assets.filter((item) => item.status === "active").length;
-  const inRepairAssets = assets.filter((item) => item.status === "in_repair").length;
-  const idleAssets = assets.filter((item) => item.status === "idle").length;
+function normalizeDashboard(assetSummary, workOrders) {
+  const totalAssets = Number(assetSummary.total) || 0;
+  const activeAssets = Number(assetSummary.active) || 0;
+  const inRepairAssets = Number(assetSummary.in_repair) || 0;
+  const idleAssets = Number(assetSummary.idle) || 0;
 
   const maintenanceNeeded = inRepairAssets + idleAssets;
   const openOrders = workOrders.filter((item) => item.status !== "done").length;
@@ -98,7 +99,7 @@ export function useDashboard() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState("");
-  const [assets, setAssets] = useState([]);
+  const [assetSummary, setAssetSummary] = useState({ total: 0, active: 0, in_repair: 0, idle: 0 });
   const [workOrders, setWorkOrders] = useState([]);
   const [lastUpdatedAt, setLastUpdatedAt] = useState(null);
 
@@ -111,14 +112,24 @@ export function useDashboard() {
       }
       setError("");
 
-      const [assetsRes, workOrdersRes] = await Promise.all([listAssetsApi(), listWorkOrdersApi()]);
+      const [assetsRes, workOrdersRes] = await Promise.all([
+        listAssetsApi({ paginated: true, page: 1, limit: 1 }),
+        listWorkOrdersApi(),
+      ]);
+      const parsedAssets = normalizeListResponse(assetsRes);
+      const summary = assetsRes?.data?.summary || {};
 
-      setAssets(Array.isArray(assetsRes?.data) ? assetsRes.data : []);
+      setAssetSummary({
+        total: parsedAssets.pagination?.total || 0,
+        active: Number(summary.active) || 0,
+        in_repair: Number(summary.in_repair) || 0,
+        idle: Number(summary.idle) || 0,
+      });
       setWorkOrders(Array.isArray(workOrdersRes?.data) ? workOrdersRes.data : []);
       setLastUpdatedAt(new Date().toISOString());
     } catch (err) {
       setError(err?.response?.data?.message || err?.message || "Không tải được dữ liệu dashboard");
-      setAssets([]);
+      setAssetSummary({ total: 0, active: 0, in_repair: 0, idle: 0 });
       setWorkOrders([]);
     } finally {
       if (silent) {
@@ -176,7 +187,7 @@ export function useDashboard() {
     };
   }, [load]);
 
-  const dashboard = useMemo(() => normalizeDashboard(assets, workOrders), [assets, workOrders]);
+  const dashboard = useMemo(() => normalizeDashboard(assetSummary, workOrders), [assetSummary, workOrders]);
 
   return {
     loading,

@@ -5,6 +5,8 @@ import { useAuthStore } from "../../store/authStore";
 import { useDashboard } from "../../hooks/useDashboard";
 import { buildChartHeights, buildDashboardNotifications, buildWorkOrderSearchText, formatNowTime, mapNotificationTone, mapPriority, mapStatus } from "./helpers";
 import "./style.css";
+import TableStateRow from "../../components/ui/TableStateRow";
+import KpiSkeletonCard from "../../components/ui/KpiSkeletonCard";
 
 function DashboardPage() {
   const user = useAuthStore((state) => state.user);
@@ -98,13 +100,23 @@ function DashboardPage() {
           {error ? <div className="app-notice app-notice-error">{error}</div> : null}
 
           <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
-            <div className="bg-white p-6 rounded-xl border border-slate-200/70 shadow-sm transition-all hover:translate-y-[-4px]">
+            {loading ? (
+              <>
+                <KpiSkeletonCard />
+                <KpiSkeletonCard />
+                <KpiSkeletonCard />
+                <KpiSkeletonCard />
+                <KpiSkeletonCard />
+              </>
+            ) : (
+              <>
+                <div className="bg-white p-6 rounded-xl border border-slate-200/70 shadow-sm transition-all hover:translate-y-[-4px]">
               <div className="flex justify-between items-start mb-4">
                 <div className="p-2 bg-surface-container-low rounded-lg text-primary"><span className="material-symbols-outlined text-2xl">precision_manufacturing</span></div>
                 <div className="h-6 w-16 opacity-30 flex items-end gap-1"><div className="w-1 bg-primary h-2"></div><div className="w-1 bg-primary h-4"></div><div className="w-1 bg-primary h-3"></div><div className="w-1 bg-primary h-5"></div><div className="w-1 bg-primary h-4"></div></div>
               </div>
               <p className="text-xs font-medium text-on-surface-variant uppercase tracking-wider">Tổng số tài sản</p>
-              <h3 className="text-2xl font-bold text-primary mt-1 tabular-nums">{loading ? "..." : stats.totalAssets.toLocaleString("vi-VN")}</h3>
+              <h3 className="text-2xl font-bold text-primary mt-1 tabular-nums">{stats.totalAssets.toLocaleString("vi-VN")}</h3>
             </div>
 
             <div className="bg-white p-6 rounded-xl border border-slate-200/70 shadow-sm transition-all hover:translate-y-[-4px]">
@@ -113,27 +125,29 @@ function DashboardPage() {
                 <div className="h-6 w-16 opacity-40 flex items-end gap-1"><div className="w-1 bg-[#4edea3] h-4"></div><div className="w-1 bg-[#4edea3] h-5"></div><div className="w-1 bg-[#4edea3] h-5"></div><div className="w-1 bg-[#4edea3] h-4"></div><div className="w-1 bg-[#4edea3] h-5"></div></div>
               </div>
               <p className="text-xs font-medium text-on-surface-variant uppercase tracking-wider">Đang hoạt động</p>
-              <h3 className="text-2xl font-bold text-primary mt-1 tabular-nums">{loading ? "..." : stats.activeAssets.toLocaleString("vi-VN")}</h3>
-              <p className="text-[10px] font-bold text-tertiary-fixed-dim mt-2 bg-tertiary-fixed-dim/10 px-2 py-0.5 rounded w-fit">{loading ? "..." : `${stats.activeRate}% Hiệu suất`}</p>
+              <h3 className="text-2xl font-bold text-primary mt-1 tabular-nums">{stats.activeAssets.toLocaleString("vi-VN")}</h3>
+              <p className="text-[10px] font-bold text-tertiary-fixed-dim mt-2 bg-tertiary-fixed-dim/10 px-2 py-0.5 rounded w-fit">{`${stats.activeRate}% Hiệu suất`}</p>
             </div>
 
             <div className="bg-white p-6 rounded-xl border border-slate-200/70 shadow-sm transition-all hover:translate-y-[-4px]">
               <div className="flex justify-between items-start mb-4"><div className="p-2 bg-amber-100 text-amber-600 rounded-lg"><span className="material-symbols-outlined text-2xl">warning</span></div><div className="h-6 w-16 opacity-30 flex items-end gap-1"><div className="w-1 bg-amber-600 h-2"></div><div className="w-1 bg-amber-600 h-3"></div><div className="w-1 bg-amber-600 h-5"></div><div className="w-1 bg-amber-600 h-4"></div><div className="w-1 bg-amber-600 h-3"></div></div></div>
               <p className="text-xs font-medium text-on-surface-variant uppercase tracking-wider">Cần bảo trì</p>
-              <h3 className="text-2xl font-bold text-primary mt-1 tabular-nums">{loading ? "..." : stats.maintenanceNeeded.toLocaleString("vi-VN")}</h3>
+              <h3 className="text-2xl font-bold text-primary mt-1 tabular-nums">{stats.maintenanceNeeded.toLocaleString("vi-VN")}</h3>
             </div>
 
             <div className="bg-white p-6 rounded-xl border border-slate-200/70 shadow-sm transition-all hover:translate-y-[-4px]">
               <div className="flex justify-between items-start mb-4"><div className="p-2 bg-secondary-container text-secondary rounded-lg"><span className="material-symbols-outlined text-2xl">pending_actions</span></div><div className="h-6 w-16 opacity-30 flex items-end gap-1"><div className="w-1 bg-secondary h-4"></div><div className="w-1 bg-secondary h-3"></div><div className="w-1 bg-secondary h-4"></div><div className="w-1 bg-secondary h-5"></div><div className="w-1 bg-secondary h-2"></div></div></div>
               <p className="text-xs font-medium text-on-surface-variant uppercase tracking-wider">Lệnh công việc mở</p>
-              <h3 className="text-2xl font-bold text-primary mt-1 tabular-nums">{loading ? "..." : stats.openOrders.toLocaleString("vi-VN")}</h3>
+              <h3 className="text-2xl font-bold text-primary mt-1 tabular-nums">{stats.openOrders.toLocaleString("vi-VN")}</h3>
             </div>
 
             <div className="bg-white p-6 rounded-xl border border-slate-200/70 shadow-sm transition-all hover:translate-y-[-4px]">
               <div className="flex justify-between items-start mb-4"><div className="p-2 bg-error-container text-error rounded-lg"><span className="material-symbols-outlined text-2xl">error</span></div><div className="h-6 w-16 opacity-30 flex items-end gap-1"><div className="w-1 bg-error h-1"></div><div className="w-1 bg-error h-2"></div><div className="w-1 bg-error h-3"></div><div className="w-1 bg-error h-1"></div><div className="w-1 bg-error h-2"></div></div></div>
               <p className="text-xs font-medium text-on-surface-variant uppercase tracking-wider">Bảo trì quá hạn</p>
-              <h3 className="text-2xl font-bold text-error mt-1 tabular-nums">{loading ? "..." : stats.overdueOrders.toLocaleString("vi-VN")}</h3>
+              <h3 className="text-2xl font-bold text-error mt-1 tabular-nums">{stats.overdueOrders.toLocaleString("vi-VN")}</h3>
             </div>
+              </>
+            )}
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -198,12 +212,12 @@ function DashboardPage() {
               <table className="w-full text-left">
                 <thead>
                   <tr className="bg-surface-container-low/50">
-                    <th className="px-8 py-4 text-xs font-bold text-on-surface-variant uppercase tracking-wider">Mã Lệnh</th>
-                    <th className="px-8 py-4 text-xs font-bold text-on-surface-variant uppercase tracking-wider">Tên Tài Sản</th>
-                    <th className="px-8 py-4 text-xs font-bold text-on-surface-variant uppercase tracking-wider">Loại</th>
-                    <th className="px-8 py-4 text-xs font-bold text-on-surface-variant uppercase tracking-wider">Người thực hiện</th>
-                    <th className="px-8 py-4 text-xs font-bold text-on-surface-variant uppercase tracking-wider">Độ ưu tiên</th>
-                    <th className="px-8 py-4 text-xs font-bold text-on-surface-variant uppercase tracking-wider">Trạng thái</th>
+                    <th className="sticky top-0 z-10 bg-surface-container-low/50 px-8 py-4 text-xs font-bold text-on-surface-variant uppercase tracking-wider">Mã Lệnh</th>
+                    <th className="sticky top-0 z-10 bg-surface-container-low/50 px-8 py-4 text-xs font-bold text-on-surface-variant uppercase tracking-wider">Tên Tài Sản</th>
+                    <th className="sticky top-0 z-10 bg-surface-container-low/50 px-8 py-4 text-xs font-bold text-on-surface-variant uppercase tracking-wider">Loại</th>
+                    <th className="sticky top-0 z-10 bg-surface-container-low/50 px-8 py-4 text-xs font-bold text-on-surface-variant uppercase tracking-wider">Người thực hiện</th>
+                    <th className="sticky top-0 z-10 bg-surface-container-low/50 px-8 py-4 text-xs font-bold text-on-surface-variant uppercase tracking-wider">Độ ưu tiên</th>
+                    <th className="sticky top-0 z-10 bg-surface-container-low/50 px-8 py-4 text-xs font-bold text-on-surface-variant uppercase tracking-wider">Trạng thái</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-surface-container-low">
@@ -228,8 +242,11 @@ function DashboardPage() {
                       </tr>
                     );
                   })}
+                  {loading ? (
+                    <TableStateRow colSpan={6} type="loading" message="Đang tải lệnh công việc gần đây..." />
+                  ) : null}
                   {!loading && filteredWorkOrders.length === 0 ? (
-                    <tr><td className="px-8 py-8 text-sm text-on-surface-variant text-center" colSpan="6">Không tìm thấy dữ liệu phù hợp.</td></tr>
+                    <TableStateRow colSpan={6} type="empty" message="Không tìm thấy dữ liệu phù hợp." />
                   ) : null}
                 </tbody>
               </table>

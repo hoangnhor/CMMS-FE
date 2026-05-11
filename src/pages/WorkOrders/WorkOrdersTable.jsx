@@ -1,5 +1,6 @@
 import { getInitials } from "../../utils/userDisplay";
 import { buildTitle, canApprove, canComplete, canEdit, canSignOff, canStart, mapAssetIcon, mapPriority, mapStatus, mapTriggerLabel, mapTypeLabel } from "./helpers";
+import TableStateRow from "../../components/ui/TableStateRow";
 
 function WorkOrdersTable({
   user,
@@ -15,6 +16,7 @@ function WorkOrdersTable({
   openCompleteModal,
   signOff,
   filteredRows,
+  totalItems,
   safePage,
   totalPages,
   pageSize,
@@ -27,24 +29,20 @@ function WorkOrdersTable({
         <table className="w-full table-fixed text-left border-collapse">
           <thead>
             <tr className="bg-surface-container-low border-none text-on-surface-variant">
-              <th className="w-[19%] px-4 py-4 text-[10px] font-extrabold uppercase tracking-widest whitespace-nowrap">Lệnh công việc</th>
-              <th className="w-[16%] px-4 py-4 text-[10px] font-extrabold uppercase tracking-widest whitespace-nowrap">Tài sản</th>
-              <th className="w-[18%] px-4 py-4 text-[10px] font-extrabold uppercase tracking-widest whitespace-nowrap">Loại</th>
-              <th className="w-[9%] px-3 py-4 text-[10px] font-extrabold uppercase tracking-widest whitespace-nowrap">Ưu tiên</th>
-              <th className="w-[11%] px-4 py-4 text-[10px] font-extrabold uppercase tracking-widest whitespace-nowrap">Trạng thái</th>
-              <th className="w-[18%] px-4 py-4 text-[10px] font-extrabold uppercase tracking-widest whitespace-nowrap">Người thực hiện</th>
-              <th className="w-[9%] px-4 py-4 text-[10px] font-extrabold uppercase tracking-widest text-right whitespace-nowrap">Thao tác</th>
+              <th className="sticky top-0 z-10 bg-surface-container-low w-[19%] px-4 py-4 text-[10px] font-extrabold uppercase tracking-widest whitespace-nowrap">Lệnh công việc</th>
+              <th className="sticky top-0 z-10 bg-surface-container-low w-[16%] px-4 py-4 text-[10px] font-extrabold uppercase tracking-widest whitespace-nowrap">Tài sản</th>
+              <th className="sticky top-0 z-10 bg-surface-container-low w-[18%] px-4 py-4 text-[10px] font-extrabold uppercase tracking-widest whitespace-nowrap">Loại</th>
+              <th className="sticky top-0 z-10 bg-surface-container-low w-[9%] px-3 py-4 text-[10px] font-extrabold uppercase tracking-widest whitespace-nowrap">Ưu tiên</th>
+              <th className="sticky top-0 z-10 bg-surface-container-low w-[11%] px-4 py-4 text-[10px] font-extrabold uppercase tracking-widest whitespace-nowrap">Trạng thái</th>
+              <th className="sticky top-0 z-10 bg-surface-container-low w-[18%] px-4 py-4 text-[10px] font-extrabold uppercase tracking-widest whitespace-nowrap">Người thực hiện</th>
+              <th className="sticky top-0 z-10 bg-surface-container-low w-[9%] px-4 py-4 text-[10px] font-extrabold uppercase tracking-widest text-right whitespace-nowrap">Thao tác</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
             {loading ? (
-              <tr>
-                <td colSpan="7" className="px-6 py-10 text-sm text-on-surface-variant text-center">Đang tải dữ liệu...</td>
-              </tr>
+              <TableStateRow colSpan={7} type="loading" message="Đang tải lệnh công việc..." />
             ) : pageRows.length === 0 ? (
-              <tr>
-                <td colSpan="7" className="px-6 py-10 text-sm text-on-surface-variant text-center">Không có dữ liệu phù hợp.</td>
-              </tr>
+              <TableStateRow colSpan={7} type="empty" message="Không có dữ liệu phù hợp." />
             ) : pageRows.map((item) => {
               const priority = mapPriority(item.priority);
               const status = mapStatus(item.status);
@@ -133,7 +131,7 @@ function WorkOrdersTable({
 
       <div className="px-6 py-4 bg-surface-container-low flex justify-between items-center">
         <div className="text-xs text-on-surface-variant font-medium">
-          Hiển thị <span className="font-bold text-primary">{filteredRows.length === 0 ? 0 : (safePage - 1) * pageSize + 1}-{Math.min(filteredRows.length, safePage * pageSize)}</span> trong số <span className="font-bold text-primary">{filteredRows.length}</span> lệnh
+          Hiển thị <span className="font-bold text-primary">{totalItems === 0 ? 0 : (safePage - 1) * pageSize + 1}-{Math.min(totalItems, safePage * pageSize)}</span> trong số <span className="font-bold text-primary">{totalItems}</span> lệnh
         </div>
         <div className="flex items-center gap-1">
           <button className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-surface-container-highest text-slate-400 transition-colors disabled:opacity-40" type="button" onClick={() => goPage(1)} disabled={safePage === 1}>

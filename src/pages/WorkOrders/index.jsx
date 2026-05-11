@@ -3,6 +3,7 @@ import WorkOrderModals from "./WorkOrderModals";
 import WorkOrdersTable from "./WorkOrdersTable";
 import { useWorkOrdersPage } from "./useWorkOrdersPage";
 import "./style.css";
+import KpiSkeletonCard from "../../components/ui/KpiSkeletonCard";
 
 function WorkOrdersPage() {
   const {
@@ -58,6 +59,7 @@ function WorkOrdersPage() {
     setCreateForm,
     notificationsRef,
     filteredRows,
+    totalItems,
     pageSize,
     safePage,
     totalPages,
@@ -115,7 +117,16 @@ function WorkOrdersPage() {
           <section className="mb-10">
             <h2 className="app-page-title mb-6">Tóm tắt vận hành hôm nay</h2>
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-              <div className="bg-surface-container-lowest p-6 rounded-xl shadow-sm border-l-4 border-tertiary-fixed-dim">
+              {loading ? (
+                <>
+                  <KpiSkeletonCard />
+                  <KpiSkeletonCard />
+                  <KpiSkeletonCard />
+                  <KpiSkeletonCard />
+                </>
+              ) : (
+                <>
+                  <div className="bg-surface-container-lowest p-6 rounded-xl shadow-sm border-l-4 border-tertiary-fixed-dim">
                 <p className="text-sm font-medium text-on-surface-variant mb-1">Lệnh đang chạy</p>
                 <div className="flex items-end justify-between">
                   <span className="text-3xl font-bold text-primary">{stats.inProgress}</span>
@@ -145,6 +156,8 @@ function WorkOrdersPage() {
                   <span className="text-error text-xs font-bold bg-error-container px-2 py-1 rounded">Khẩn cấp</span>
                 </div>
               </div>
+                </>
+              )}
             </div>
           </section>
 
@@ -240,6 +253,7 @@ function WorkOrdersPage() {
             openCompleteModal={openCompleteModal}
             signOff={signOff}
             filteredRows={filteredRows}
+            totalItems={totalItems}
             safePage={safePage}
             totalPages={totalPages}
             pageSize={pageSize}
