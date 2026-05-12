@@ -9,7 +9,7 @@
 > Product-scale frontend cho CMMS: đồng bộ realtime, trải nghiệm dữ liệu lớn ổn định và luồng thao tác theo role.
 
 - Live Demo: `https://htcmms.vercel.app/auth`
-- Related Repositories: `[TODO: FE repo]` | `[TODO: BE repo]`
+- Related Repositories: `https://github.com/hoangnhor/CMMS-FE` | `https://github.com/hoangnhor/CMMS-BE`
 
 ## 🔥 Điểm sáng Kỹ thuật (Technical Highlights)
 
@@ -46,7 +46,7 @@ npm run dev
 ### `.env`
 
 ```env
-VITE_API_BASE_URL=
+VITE_API_BASE_URL=https://cmms-be.onrender.com/api
 ```
 
 ### Lệnh chính
