@@ -8,7 +8,7 @@
 
 > Product-scale frontend cho CMMS: đồng bộ realtime, trải nghiệm dữ liệu lớn ổn định và luồng thao tác theo role.
 
-- Live Demo: `[TODO]`
+- Live Demo: `https://htcmms.vercel.app/auth`
 - Related Repositories: `[TODO: FE repo]` | `[TODO: BE repo]`
 
 ## 🔥 Điểm sáng Kỹ thuật (Technical Highlights)
