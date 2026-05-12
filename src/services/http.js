@@ -2,7 +2,13 @@ import api from "./api";
 
 async function unwrap(promise) {
   const response = await promise;
-  return response.data;
+  const payload = response.data;
+  if (payload?.success === false) {
+    const err = new Error(payload.message || "Yêu cầu thất bại");
+    err.response = { data: payload, status: response.status };
+    throw err;
+  }
+  return payload;
 }
 
 export function get(path, config) {

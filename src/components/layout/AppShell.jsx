@@ -66,6 +66,7 @@ function ShellNav({ currentKey, onNavigate, onLogout }) {
               }`}
               type="button"
               onClick={() => onNavigate(item.path)}
+              aria-current={active ? "page" : undefined}
             >
               <span
                 className="material-symbols-outlined text-xl"
@@ -128,9 +129,11 @@ function AppShell({
           drawerOpen ? "pointer-events-auto opacity-100" : "pointer-events-none opacity-0"
         }`}
         onClick={() => setDrawerOpen(false)}
+        aria-hidden={!drawerOpen}
       />
 
       <aside
+        id="app-sidebar"
         className={`fixed inset-y-0 left-0 z-50 flex w-[17rem] flex-col bg-[#001e40] py-6 shadow-2xl shadow-black/20 transition-transform duration-200 lg:translate-x-0 ${
           drawerOpen ? "translate-x-0" : "-translate-x-full"
         }`}
@@ -145,6 +148,8 @@ function AppShell({
             type="button"
             onClick={() => setDrawerOpen(true)}
             aria-label="Mở điều hướng"
+            aria-expanded={drawerOpen}
+            aria-controls="app-sidebar"
           >
             <span className="material-symbols-outlined text-[20px]">menu</span>
           </button>
@@ -177,6 +182,8 @@ function AppShell({
                 className="relative text-slate-500 transition-colors hover:text-[#4edea3]"
                 type="button"
                 onClick={() => setShowNotifications?.((prev) => !prev)}
+                aria-label="Mở thông báo"
+                aria-expanded={showNotifications}
               >
                 <span
                   className="material-symbols-outlined"
@@ -192,6 +199,7 @@ function AppShell({
                 className="text-slate-500 transition-colors hover:text-[#4edea3]"
                 type="button"
                 onClick={() => setShowHelp?.(true)}
+                aria-label="Mở hướng dẫn nhanh"
               >
                 <span className="material-symbols-outlined">help</span>
               </button>

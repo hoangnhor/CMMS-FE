@@ -58,7 +58,6 @@ function WorkOrdersPage() {
     createForm,
     setCreateForm,
     notificationsRef,
-    filteredRows,
     totalItems,
     pageSize,
     safePage,
@@ -252,7 +251,6 @@ function WorkOrdersPage() {
             start={start}
             openCompleteModal={openCompleteModal}
             signOff={signOff}
-            filteredRows={filteredRows}
             totalItems={totalItems}
             safePage={safePage}
             totalPages={totalPages}

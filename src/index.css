@@ -88,6 +88,15 @@ body {
   font-size: 14px;
 }
 
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid #4edea3;
+  outline-offset: 2px;
+}
+
 :root {
   --shell-bg: #eef3f8;
   --shell-sidebar: #001e40;
@@ -301,6 +310,44 @@ body {
 
 .app-btn-danger:hover {
   background: #991b1b;
+}
+
+.app-input,
+.app-select,
+.app-textarea {
+  width: 100%;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: #f0f4f8;
+  font-size: 14px;
+  color: #171c1f;
+  transition: border-color 0.2s ease, background-color 0.2s ease;
+}
+
+.app-input,
+.app-select {
+  min-height: 40px;
+  padding: 8px 12px;
+}
+
+.app-textarea {
+  min-height: 110px;
+  padding: 10px 12px;
+  resize: vertical;
+}
+
+.app-input:disabled,
+.app-select:disabled,
+.app-textarea:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.app-input[aria-invalid="true"],
+.app-select[aria-invalid="true"],
+.app-textarea[aria-invalid="true"] {
+  border-color: #ba1a1a;
+  background: #fef2f2;
 }
 
 .app-btn-secondary:disabled,

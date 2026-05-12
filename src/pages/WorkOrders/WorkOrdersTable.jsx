@@ -15,7 +15,6 @@ function WorkOrdersTable({
   start,
   openCompleteModal,
   signOff,
-  filteredRows,
   totalItems,
   safePage,
   totalPages,
@@ -25,8 +24,8 @@ function WorkOrdersTable({
   return (
     <section className="bg-surface-container-lowest rounded-xl shadow-xl shadow-black/[0.02] overflow-hidden">
       {error ? <div className="px-6 py-3 text-sm text-error bg-error-container/40">{error}</div> : null}
-      <div className="w-full">
-        <table className="w-full table-fixed text-left border-collapse">
+      <div className="w-full overflow-x-auto">
+        <table className="w-full min-w-[1080px] table-fixed text-left border-collapse">
           <thead>
             <tr className="bg-surface-container-low border-none text-on-surface-variant">
               <th className="sticky top-0 z-10 bg-surface-container-low w-[19%] px-4 py-4 text-[10px] font-extrabold uppercase tracking-widest whitespace-nowrap">Lệnh công việc</th>
@@ -80,16 +79,16 @@ function WorkOrdersTable({
                   </td>
                   <td className="px-4 py-4 text-right whitespace-nowrap">
                     <div className="flex justify-end gap-1.5">
-                      <button className="p-1 hover:bg-slate-100 text-slate-500 transition-colors rounded disabled:opacity-40" type="button" title="Chi tiết" onClick={() => openDetail(item)}>
+                      <button className="p-1 hover:bg-slate-100 text-slate-500 transition-colors rounded disabled:opacity-40" type="button" title="Chi tiết" aria-label={`Chi tiết ${item.woCode || "lệnh"}`} onClick={() => openDetail(item)}>
                         <span className="material-symbols-outlined text-[18px]">visibility</span>
                       </button>
                       {canEdit(user, item) ? (
                         <>
-                          <button className="p-1 hover:bg-blue-50 text-blue-600 transition-colors rounded disabled:opacity-40" type="button" title="Sửa" onClick={() => openEditModal(item)}>
+                          <button className="p-1 hover:bg-blue-50 text-blue-600 transition-colors rounded disabled:opacity-40" type="button" title="Sửa" aria-label={`Sửa ${item.woCode || "lệnh"}`} onClick={() => openEditModal(item)}>
                             <span className="material-symbols-outlined text-[18px]">edit</span>
                           </button>
                           {item.status === "draft" ? (
-                            <button className="p-1 hover:bg-violet-50 text-violet-600 transition-colors rounded disabled:opacity-40" type="button" title="Gửi duyệt" onClick={() => openSubmitModal(item)}>
+                            <button className="p-1 hover:bg-violet-50 text-violet-600 transition-colors rounded disabled:opacity-40" type="button" title="Gửi duyệt" aria-label={`Gửi duyệt ${item.woCode || "lệnh"}`} onClick={() => openSubmitModal(item)}>
                               <span className="material-symbols-outlined text-[18px]">outgoing_mail</span>
                             </button>
                           ) : null}
@@ -97,26 +96,26 @@ function WorkOrdersTable({
                       ) : null}
                       {canApprove(user, item) ? (
                         <>
-                          <button className="p-1 hover:bg-emerald-50 text-[#4edea3] transition-colors rounded" type="button" title="Duyệt" onClick={() => openApproveModal(item)}>
+                          <button className="p-1 hover:bg-emerald-50 text-[#4edea3] transition-colors rounded" type="button" title="Duyệt" aria-label={`Duyệt ${item.woCode || "lệnh"}`} onClick={() => openApproveModal(item)}>
                             <span className="material-symbols-outlined text-[18px]">check_circle</span>
                           </button>
-                          <button className="p-1 hover:bg-rose-50 text-error transition-colors rounded" type="button" title="Từ chối" onClick={() => openRejectModal(item)}>
+                          <button className="p-1 hover:bg-rose-50 text-error transition-colors rounded" type="button" title="Từ chối" aria-label={`Từ chối ${item.woCode || "lệnh"}`} onClick={() => openRejectModal(item)}>
                             <span className="material-symbols-outlined text-[18px]">cancel</span>
                           </button>
                         </>
                       ) : null}
                       {canStart(user, item) ? (
-                        <button className="p-1 hover:bg-amber-50 text-amber-600 transition-colors rounded" type="button" title="Bắt đầu" onClick={() => start(item._id)}>
+                        <button className="p-1 hover:bg-amber-50 text-amber-600 transition-colors rounded" type="button" title="Bắt đầu" aria-label={`Bắt đầu ${item.woCode || "lệnh"}`} onClick={() => start(item._id)}>
                           <span className="material-symbols-outlined text-[18px]">play_arrow</span>
                         </button>
                       ) : null}
                       {canComplete(user, item) ? (
-                        <button className="p-1 hover:bg-amber-50 text-amber-600 transition-colors rounded" type="button" title="Hoàn thành" onClick={() => openCompleteModal(item)}>
+                        <button className="p-1 hover:bg-amber-50 text-amber-600 transition-colors rounded" type="button" title="Hoàn thành" aria-label={`Hoàn thành ${item.woCode || "lệnh"}`} onClick={() => openCompleteModal(item)}>
                           <span className="material-symbols-outlined text-[18px]">task_alt</span>
                         </button>
                       ) : null}
                       {canSignOff(user, item) ? (
-                        <button className="p-1 hover:bg-emerald-50 text-emerald-600 transition-colors rounded" type="button" title="Sign-off" onClick={() => signOff(item._id)}>
+                        <button className="p-1 hover:bg-emerald-50 text-emerald-600 transition-colors rounded" type="button" title="Sign-off" aria-label={`Sign-off ${item.woCode || "lệnh"}`} onClick={() => signOff(item._id)}>
                           <span className="material-symbols-outlined text-[18px]">verified</span>
                         </button>
                       ) : null}

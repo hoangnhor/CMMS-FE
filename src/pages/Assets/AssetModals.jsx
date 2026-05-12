@@ -21,6 +21,9 @@ function AssetModals({
   showHelp,
   setShowHelp,
 }) {
+  const createInvalid = !createForm.assetCode?.trim() || !createForm.name?.trim();
+  const editInvalid = !editForm.name?.trim();
+
   return (
     <>
       {deleteModal.open ? (
@@ -53,7 +56,7 @@ function AssetModals({
 
       {showCreateModal ? (
         <div className="app-modal-overlay z-[70]" onClick={closeCreateModal}>
-          <div className="app-modal-panel max-w-2xl" onClick={(event) => event.stopPropagation()}>
+          <div className="app-modal-panel max-w-2xl" role="dialog" aria-modal="true" aria-label="Thêm tài sản mới" onClick={(event) => event.stopPropagation()}>
             <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
               <h3 className="text-lg font-bold text-primary flex items-center gap-2">
                 <span className="material-symbols-outlined text-primary-container">add_task</span>
@@ -66,30 +69,30 @@ function AssetModals({
             <div className="px-6 py-5 space-y-3">
               {createError ? <div className="app-notice-compact app-notice-error">{createError}</div> : null}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                <input className="bg-surface-container-low border-none rounded-lg py-2 px-3 text-sm outline-none focus:ring-2 focus:ring-[#4edea3]/50" placeholder="Mã tài sản*" value={createForm.assetCode} onChange={(event) => setCreateForm((prev) => ({ ...prev, assetCode: event.target.value }))} />
-                <input className="bg-surface-container-low border-none rounded-lg py-2 px-3 text-sm outline-none focus:ring-2 focus:ring-[#4edea3]/50" placeholder="Tên tài sản*" value={createForm.name} onChange={(event) => setCreateForm((prev) => ({ ...prev, name: event.target.value }))} />
-                <select className="bg-surface-container-low border-none rounded-lg py-2 px-3 text-sm outline-none focus:ring-2 focus:ring-[#4edea3]/50" value={createForm.assetType} onChange={(event) => setCreateForm((prev) => ({ ...prev, assetType: event.target.value }))}>
+                <input className="app-input" placeholder="Mã tài sản*" value={createForm.assetCode} required aria-invalid={!createForm.assetCode?.trim()} onChange={(event) => setCreateForm((prev) => ({ ...prev, assetCode: event.target.value }))} />
+                <input className="app-input" placeholder="Tên tài sản*" value={createForm.name} required aria-invalid={!createForm.name?.trim()} onChange={(event) => setCreateForm((prev) => ({ ...prev, name: event.target.value }))} />
+                <select className="app-select" value={createForm.assetType} onChange={(event) => setCreateForm((prev) => ({ ...prev, assetType: event.target.value }))}>
                   <option value="machine">Máy móc</option>
                   <option value="mold">Khuôn</option>
                   <option value="jig_tool">Jig/Tool</option>
                   <option value="infrastructure">Hạ tầng</option>
                 </select>
-                <select className="bg-surface-container-low border-none rounded-lg py-2 px-3 text-sm outline-none focus:ring-2 focus:ring-[#4edea3]/50" value={createForm.status} onChange={(event) => setCreateForm((prev) => ({ ...prev, status: event.target.value }))}>
+                <select className="app-select" value={createForm.status} onChange={(event) => setCreateForm((prev) => ({ ...prev, status: event.target.value }))}>
                   <option value="active">Đang hoạt động</option>
                   <option value="in_repair">Bảo trì</option>
                   <option value="idle">Dừng máy</option>
                   <option value="disposed">Ngưng sử dụng</option>
                 </select>
-                <input className="bg-surface-container-low border-none rounded-lg py-2 px-3 text-sm outline-none focus:ring-2 focus:ring-[#4edea3]/50" placeholder="Vị trí" value={createForm.location} onChange={(event) => setCreateForm((prev) => ({ ...prev, location: event.target.value }))} />
-                <input className="bg-surface-container-low border-none rounded-lg py-2 px-3 text-sm outline-none focus:ring-2 focus:ring-[#4edea3]/50" placeholder="Hãng" value={createForm.manufacturer} onChange={(event) => setCreateForm((prev) => ({ ...prev, manufacturer: event.target.value }))} />
-                <input className="bg-surface-container-low border-none rounded-lg py-2 px-3 text-sm outline-none focus:ring-2 focus:ring-[#4edea3]/50" placeholder="Model" value={createForm.model} onChange={(event) => setCreateForm((prev) => ({ ...prev, model: event.target.value }))} />
-                <input className="bg-surface-container-low border-none rounded-lg py-2 px-3 text-sm outline-none focus:ring-2 focus:ring-[#4edea3]/50" placeholder="Serial" value={createForm.serialNumber} onChange={(event) => setCreateForm((prev) => ({ ...prev, serialNumber: event.target.value }))} />
-                <input className="bg-surface-container-low border-none rounded-lg py-2 px-3 text-sm outline-none focus:ring-2 focus:ring-[#4edea3]/50" type="date" value={createForm.purchaseDate} onChange={(event) => setCreateForm((prev) => ({ ...prev, purchaseDate: event.target.value }))} />
-                <input className="bg-surface-container-low border-none rounded-lg py-2 px-3 text-sm outline-none focus:ring-2 focus:ring-[#4edea3]/50" placeholder="Giá trị" value={createForm.purchasePrice} onChange={(event) => setCreateForm((prev) => ({ ...prev, purchasePrice: event.target.value }))} />
+                <input className="app-input" placeholder="Vị trí" value={createForm.location} onChange={(event) => setCreateForm((prev) => ({ ...prev, location: event.target.value }))} />
+                <input className="app-input" placeholder="Hãng" value={createForm.manufacturer} onChange={(event) => setCreateForm((prev) => ({ ...prev, manufacturer: event.target.value }))} />
+                <input className="app-input" placeholder="Model" value={createForm.model} onChange={(event) => setCreateForm((prev) => ({ ...prev, model: event.target.value }))} />
+                <input className="app-input" placeholder="Serial" value={createForm.serialNumber} onChange={(event) => setCreateForm((prev) => ({ ...prev, serialNumber: event.target.value }))} />
+                <input className="app-input" type="date" value={createForm.purchaseDate} onChange={(event) => setCreateForm((prev) => ({ ...prev, purchaseDate: event.target.value }))} />
+                <input className="app-input" placeholder="Giá trị" value={createForm.purchasePrice} onChange={(event) => setCreateForm((prev) => ({ ...prev, purchasePrice: event.target.value }))} />
               </div>
               <div className="flex justify-end gap-2 pt-2">
                 <button type="button" className="app-btn-secondary" onClick={closeCreateModal}>Hủy</button>
-                <button type="button" className="app-btn-primary disabled:opacity-50" disabled={createLoading} onClick={submitCreateAsset}>
+                <button type="button" className="app-btn-primary disabled:opacity-50" disabled={createLoading || createInvalid} onClick={submitCreateAsset}>
                   {createLoading ? "Đang tạo..." : "Tạo tài sản"}
                 </button>
               </div>
@@ -100,7 +103,7 @@ function AssetModals({
 
       {actionModal ? (
         <div className="app-modal-overlay z-[70]" onClick={closeActionModal}>
-          <div className="app-modal-panel max-w-2xl" onClick={(event) => event.stopPropagation()}>
+          <div className="app-modal-panel max-w-2xl" role="dialog" aria-modal="true" aria-label={actionModal.mode === "view" ? "Chi tiết tài sản" : "Chỉnh sửa tài sản"} onClick={(event) => event.stopPropagation()}>
             <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
               <h3 className="text-lg font-bold text-primary flex items-center gap-2">
                 <span className="material-symbols-outlined text-primary-container">
@@ -132,22 +135,22 @@ function AssetModals({
                 <div className="space-y-3">
                   {modalError ? <div className="app-notice-compact app-notice-error">{modalError}</div> : null}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    <input className="bg-surface-container-low border-none rounded-lg py-2 px-3 text-sm outline-none focus:ring-2 focus:ring-[#4edea3]/50" placeholder="Tên tài sản" value={editForm.name} onChange={(event) => setEditForm((prev) => ({ ...prev, name: event.target.value }))} />
-                    <select className="bg-surface-container-low border-none rounded-lg py-2 px-3 text-sm outline-none focus:ring-2 focus:ring-[#4edea3]/50" value={editForm.status} onChange={(event) => setEditForm((prev) => ({ ...prev, status: event.target.value }))}>
+                    <input className="app-input" placeholder="Tên tài sản" value={editForm.name} required aria-invalid={!editForm.name?.trim()} onChange={(event) => setEditForm((prev) => ({ ...prev, name: event.target.value }))} />
+                    <select className="app-select" value={editForm.status} onChange={(event) => setEditForm((prev) => ({ ...prev, status: event.target.value }))}>
                       <option value="active">Đang hoạt động</option>
                       <option value="in_repair">Bảo trì</option>
                       <option value="idle">Dừng máy</option>
                       <option value="disposed">Ngưng sử dụng</option>
                     </select>
-                    <input className="bg-surface-container-low border-none rounded-lg py-2 px-3 text-sm outline-none focus:ring-2 focus:ring-[#4edea3]/50" placeholder="Vị trí" value={editForm.location} onChange={(event) => setEditForm((prev) => ({ ...prev, location: event.target.value }))} />
-                    <input className="bg-surface-container-low border-none rounded-lg py-2 px-3 text-sm outline-none focus:ring-2 focus:ring-[#4edea3]/50" placeholder="Hãng" value={editForm.manufacturer} onChange={(event) => setEditForm((prev) => ({ ...prev, manufacturer: event.target.value }))} />
-                    <input className="bg-surface-container-low border-none rounded-lg py-2 px-3 text-sm outline-none focus:ring-2 focus:ring-[#4edea3]/50" placeholder="Model" value={editForm.model} onChange={(event) => setEditForm((prev) => ({ ...prev, model: event.target.value }))} />
-                    <input className="bg-surface-container-low border-none rounded-lg py-2 px-3 text-sm outline-none focus:ring-2 focus:ring-[#4edea3]/50" placeholder="Serial" value={editForm.serialNumber} onChange={(event) => setEditForm((prev) => ({ ...prev, serialNumber: event.target.value }))} />
-                    <input className="bg-surface-container-low border-none rounded-lg py-2 px-3 text-sm outline-none focus:ring-2 focus:ring-[#4edea3]/50 md:col-span-2" placeholder="Giá trị" value={editForm.purchasePrice} onChange={(event) => setEditForm((prev) => ({ ...prev, purchasePrice: event.target.value }))} />
+                    <input className="app-input" placeholder="Vị trí" value={editForm.location} onChange={(event) => setEditForm((prev) => ({ ...prev, location: event.target.value }))} />
+                    <input className="app-input" placeholder="Hãng" value={editForm.manufacturer} onChange={(event) => setEditForm((prev) => ({ ...prev, manufacturer: event.target.value }))} />
+                    <input className="app-input" placeholder="Model" value={editForm.model} onChange={(event) => setEditForm((prev) => ({ ...prev, model: event.target.value }))} />
+                    <input className="app-input" placeholder="Serial" value={editForm.serialNumber} onChange={(event) => setEditForm((prev) => ({ ...prev, serialNumber: event.target.value }))} />
+                    <input className="app-input md:col-span-2" placeholder="Giá trị" value={editForm.purchasePrice} onChange={(event) => setEditForm((prev) => ({ ...prev, purchasePrice: event.target.value }))} />
                   </div>
                   <div className="flex justify-end gap-2 pt-2">
                     <button type="button" className="app-btn-secondary" onClick={closeActionModal}>Hủy</button>
-                    <button type="button" className="app-btn-primary disabled:opacity-50" disabled={modalLoading} onClick={submitEditAsset}>
+                    <button type="button" className="app-btn-primary disabled:opacity-50" disabled={modalLoading || editInvalid} onClick={submitEditAsset}>
                       {modalLoading ? "Đang lưu..." : "Lưu thay đổi"}
                     </button>
                   </div>

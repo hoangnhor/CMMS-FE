@@ -303,11 +303,11 @@ function MaintenancePage() {
                     Tạo kế hoạch mới
                   </button>
                   <button className="p-2 hover:bg-surface-container-low rounded transition-colors" type="button" onClick={() => { setSearch(""); setPage(1); }} title="Xóa bộ lọc tìm kiếm"><span className="material-symbols-outlined text-slate-500">filter_list</span></button>
-                  <button className="p-2 hover:bg-surface-container-low rounded transition-colors" type="button" onClick={exportCsv} title="Xuất CSV"><span className="material-symbols-outlined text-slate-500">download</span></button>
+                  <button className="p-2 hover:bg-surface-container-low rounded transition-colors" type="button" onClick={exportCsv} title="Xuất CSV" aria-label="Xuất danh sách kế hoạch CSV"><span className="material-symbols-outlined text-slate-500">download</span></button>
                 </div>
               </div>
               <div className="overflow-x-auto">
-                <table className="w-full text-left border-collapse">
+                <table className="w-full min-w-[980px] text-left border-collapse">
                   <thead>
                     <tr className="bg-surface-container-low/50">
                       <th className="sticky top-0 z-10 bg-surface-container-low/50 px-8 py-4 text-[11px] font-bold uppercase tracking-widest text-on-surface-variant">Tài sản & Mã số</th>
@@ -355,19 +355,19 @@ function MaintenancePage() {
               <div className="px-8 py-4 bg-surface-container-low/30 border-t border-surface-container flex justify-between items-center">
                 <p className="text-xs text-on-surface-variant italic">Hiển thị {scheduleRows.length === 0 ? 0 : (safePage - 1) * PAGE_SIZE + 1}-{Math.min(scheduleRows.length, safePage * PAGE_SIZE)} trên tổng số {scheduleRows.length} kế hoạch</p>
                 <div className="flex items-center gap-1">
-                  <button className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-surface-container-highest text-slate-400 transition-colors disabled:opacity-40" onClick={() => goPage(1)} disabled={safePage === 1}>
+                  <button className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-surface-container-highest text-slate-400 transition-colors disabled:opacity-40" type="button" aria-label="Trang đầu" onClick={() => goPage(1)} disabled={safePage === 1}>
                     <span className="material-symbols-outlined text-[18px]">first_page</span>
                   </button>
-                  <button className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-surface-container-highest text-slate-400 transition-colors disabled:opacity-40" onClick={() => goPage(safePage - 1)} disabled={safePage === 1}>
+                  <button className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-surface-container-highest text-slate-400 transition-colors disabled:opacity-40" type="button" aria-label="Trang trước" onClick={() => goPage(safePage - 1)} disabled={safePage === 1}>
                     <span className="material-symbols-outlined text-[18px]">chevron_left</span>
                   </button>
                   <div className="flex items-center px-2">
-                    <button className="w-8 h-8 flex items-center justify-center rounded-lg bg-primary text-white text-xs font-bold">{safePage}</button>
+                    <button className="w-8 h-8 flex items-center justify-center rounded-lg bg-primary text-white text-xs font-bold" type="button" aria-current="page">{safePage}</button>
                   </div>
-                  <button className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-surface-container-highest text-slate-400 transition-colors disabled:opacity-40" onClick={() => goPage(safePage + 1)} disabled={safePage === totalPages}>
+                  <button className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-surface-container-highest text-slate-400 transition-colors disabled:opacity-40" type="button" aria-label="Trang sau" onClick={() => goPage(safePage + 1)} disabled={safePage === totalPages}>
                     <span className="material-symbols-outlined text-[18px]">chevron_right</span>
                   </button>
-                  <button className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-surface-container-highest text-slate-400 transition-colors disabled:opacity-40" onClick={() => goPage(totalPages)} disabled={safePage === totalPages}>
+                  <button className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-surface-container-highest text-slate-400 transition-colors disabled:opacity-40" type="button" aria-label="Trang cuối" onClick={() => goPage(totalPages)} disabled={safePage === totalPages}>
                     <span className="material-symbols-outlined text-[18px]">last_page</span>
                   </button>
                 </div>
@@ -388,7 +388,7 @@ function MaintenancePage() {
 
       {showCreateModal ? (
         <div className="app-modal-overlay z-[70]" onClick={() => { if (!createLoading) setShowCreateModal(false); }}>
-          <div className="app-modal-panel max-w-xl" onClick={(event) => event.stopPropagation()}>
+          <div className="app-modal-panel max-w-xl" role="dialog" aria-modal="true" aria-label="Tạo kế hoạch bảo trì" onClick={(event) => event.stopPropagation()}>
             <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
               <h3 className="text-lg font-bold text-primary flex items-center gap-2"><span className="material-symbols-outlined text-primary-container">add_task</span>Tạo kế hoạch mới</h3>
               <button type="button" className="text-slate-500 hover:text-slate-700" onClick={() => { if (!createLoading) setShowCreateModal(false); }}>
@@ -401,14 +401,14 @@ function MaintenancePage() {
               <form className="space-y-4" onSubmit={(e) => { e.preventDefault(); createSchedule(); }}>
                 <div className="space-y-2">
                   <label className="text-[11px] font-bold uppercase tracking-widest text-on-surface-variant">Chọn tài sản</label>
-                  <select className="w-full bg-surface-container-low border-none rounded-lg py-3 px-4 text-sm focus:ring-2 focus:ring-[#4edea3]/50" value={createForm.assetId} disabled={!canManageMaintenance} onChange={(event) => setCreateForm((prev) => ({ ...prev, assetId: event.target.value }))}>
+                  <select className="app-select" value={createForm.assetId} aria-invalid={!createForm.assetId} disabled={!canManageMaintenance} onChange={(event) => setCreateForm((prev) => ({ ...prev, assetId: event.target.value }))}>
                     <option value="">Chọn tài sản</option>
                     {assets.map((asset) => <option key={asset._id} value={asset._id}>{asset.assetCode} - {asset.name}</option>)}
                   </select>
                 </div>
                 <div className="space-y-2">
                   <label className="text-[11px] font-bold uppercase tracking-widest text-on-surface-variant">Loại trigger</label>
-                  <select className="w-full bg-surface-container-low border-none rounded-lg py-3 px-4 text-sm focus:ring-2 focus:ring-[#4edea3]/50" value={createForm.triggerType} disabled={!canManageMaintenance} onChange={(event) => setCreateForm((prev) => ({ ...prev, triggerType: event.target.value }))}>
+                  <select className="app-select" value={createForm.triggerType} disabled={!canManageMaintenance} onChange={(event) => setCreateForm((prev) => ({ ...prev, triggerType: event.target.value }))}>
                     <option value="days">Theo ngày</option>
                     <option value="hours">Theo giờ</option>
                     <option value="shots">Theo shot</option>
@@ -417,14 +417,14 @@ function MaintenancePage() {
                 </div>
                 <div className="space-y-2">
                   <label className="text-[11px] font-bold uppercase tracking-widest text-on-surface-variant">Chu kỳ</label>
-                  <input className="w-full bg-surface-container-low border-none rounded-lg py-3 px-4 text-sm focus:ring-2 focus:ring-[#4edea3]/50" type="number" min="1" value={createForm.intervalValue} disabled={!canManageMaintenance} onChange={(event) => setCreateForm((prev) => ({ ...prev, intervalValue: event.target.value }))} />
+                  <input className="app-input" type="number" min="1" value={createForm.intervalValue} aria-invalid={!createForm.intervalValue || Number(createForm.intervalValue) <= 0} disabled={!canManageMaintenance} onChange={(event) => setCreateForm((prev) => ({ ...prev, intervalValue: event.target.value }))} />
                 </div>
                 <label className="flex items-center gap-2 text-sm">
                   <input type="checkbox" checked={createForm.isActive} disabled={!canManageMaintenance} onChange={(event) => setCreateForm((prev) => ({ ...prev, isActive: event.target.checked }))} /> Kích hoạt ngay
                 </label>
                 <div className="flex justify-end gap-2 pt-2">
                   <button type="button" className="app-btn-secondary" onClick={() => setShowCreateModal(false)} disabled={createLoading}>Hủy</button>
-                  <button className="app-btn-primary disabled:opacity-50" type="submit" disabled={!canManageMaintenance || createLoading}>{createLoading ? "Đang tạo..." : "Lưu kế hoạch"}</button>
+                  <button className="app-btn-primary disabled:opacity-50" type="submit" disabled={!canManageMaintenance || createLoading || !createForm.assetId || Number(createForm.intervalValue) <= 0}>{createLoading ? "Đang tạo..." : "Lưu kế hoạch"}</button>
                 </div>
               </form>
             </div>
@@ -434,7 +434,7 @@ function MaintenancePage() {
 
       {showHelp ? (
         <div className="app-modal-overlay z-[60]" onClick={() => setShowHelp(false)}>
-          <div className="app-modal-panel max-w-xl" onClick={(event) => event.stopPropagation()}>
+          <div className="app-modal-panel max-w-xl" role="dialog" aria-modal="true" aria-label="Hướng dẫn nhanh bảo trì" onClick={(event) => event.stopPropagation()}>
             <div className="px-6 py-4 border-b border-slate-100"><h3 className="text-lg font-bold text-primary">Hướng dẫn nhanh</h3></div>
             <div className="px-6 py-5 text-sm text-slate-700 space-y-3">
               <p>1. Theo dõi lịch PM ở bảng kế hoạch theo từng loại trigger.</p>

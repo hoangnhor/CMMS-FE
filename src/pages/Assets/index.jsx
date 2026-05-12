@@ -42,7 +42,6 @@ function AssetsPage() {
     setAdvancedFilters,
     notificationsRef,
     notifications,
-    filteredAssets,
     totalItems,
     pageSize,
     safePage,

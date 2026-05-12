@@ -192,10 +192,6 @@ export function useAssetsPage() {
   }, [loadAssets]);
 
   useEffect(() => {
-    setPage(1);
-  }, [debouncedSearch, typeFilter, statusFilter]);
-
-  useEffect(() => {
     if (!notice.text) return undefined;
     const timer = setTimeout(() => setNotice({ type: "", text: "" }), 3500);
     return () => clearTimeout(timer);

@@ -29,6 +29,9 @@ api.interceptors.response.use(
     if (error?.response?.status === 401) {
       useAuthStore.getState().logout();
     }
+    if (!error?.response) {
+      error.message = "Không kết nối được API. Kiểm tra VITE_API_BASE_URL và CORS backend.";
+    }
     return Promise.reject(error);
   }
 );

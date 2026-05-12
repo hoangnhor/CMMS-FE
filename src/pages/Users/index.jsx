@@ -2,6 +2,7 @@ import AppShell from "../../components/layout/AppShell";
 import { getInitials } from "../../utils/userDisplay";
 import { PAGE_SIZE, mapRoleText, mapRoleTone } from "./helpers";
 import { useUsersPage } from "./useUsersPage";
+import TableStateRow from "../../components/ui/TableStateRow";
 import "./style.css";
 
 function UsersPage() {
@@ -37,6 +38,7 @@ function UsersPage() {
     totalUsers,
     setPage,
   } = useUsersPage();
+  const formInvalid = !form.name?.trim() || !form.email?.trim() || !form.password || !form.role;
 
   return (
     <>
@@ -96,7 +98,7 @@ function UsersPage() {
             <div className="xl:col-span-3">
               <div className="bg-surface-container-lowest rounded-xl shadow-sm overflow-hidden">
                 <div className="overflow-x-auto">
-                  <table className="w-full text-left border-collapse">
+                  <table className="w-full min-w-[820px] text-left border-collapse">
                     <thead>
                       <tr className="bg-surface-container-low">
                         <th className="px-6 py-4 text-[11px] font-bold text-on-surface-variant uppercase tracking-widest">Người dùng</th>
@@ -140,18 +142,18 @@ function UsersPage() {
                               disabled={!isAdmin || toggleLoadingId === item._id}
                               onClick={() => toggleUserStatus(item)}
                               title={item.isActive ? "Khóa tài khoản" : "Mở tài khoản"}
+                              aria-label={item.isActive ? `Khóa tài khoản ${item.email}` : `Mở tài khoản ${item.email}`}
                             >
-                              <span className="material-symbols-outlined text-[20px]">more_vert</span>
+                              <span className="material-symbols-outlined text-[20px]">
+                                {item.isActive ? "lock_person" : "lock_open"}
+                              </span>
                             </button>
                           </td>
                         </tr>
                       ))}
 
-                      {!loading && filteredUsers.length === 0 ? (
-                        <tr>
-                          <td className="px-6 py-8 text-center text-sm text-slate-500" colSpan="4">Không có người dùng phù hợp.</td>
-                        </tr>
-                      ) : null}
+                      {loading ? <TableStateRow colSpan={4} type="loading" message="Đang tải người dùng..." /> : null}
+                      {!loading && filteredUsers.length === 0 ? <TableStateRow colSpan={4} type="empty" message="Không có người dùng phù hợp." /> : null}
                     </tbody>
                   </table>
                 </div>
@@ -159,10 +161,10 @@ function UsersPage() {
                 <div className="px-6 py-4 bg-surface-container-low/50 flex justify-between items-center">
                   <span className="text-xs text-on-surface-variant">Hiển thị {filteredUsers.length === 0 ? 0 : (safePage - 1) * PAGE_SIZE + 1}-{Math.min(filteredUsers.length, safePage * PAGE_SIZE)} trên {filteredUsers.length} người dùng</span>
                   <div className="flex space-x-2">
-                    <button className="p-1.5 rounded bg-white text-slate-400 hover:text-primary shadow-sm disabled:opacity-50" type="button" onClick={() => goPage(safePage - 1)} disabled={safePage === 1}>
+                    <button className="p-1.5 rounded bg-white text-slate-400 hover:text-primary shadow-sm disabled:opacity-50" type="button" aria-label="Trang trước" onClick={() => goPage(safePage - 1)} disabled={safePage === 1}>
                       <span className="material-symbols-outlined text-[18px]">chevron_left</span>
                     </button>
-                    <button className="p-1.5 rounded bg-[#001e40] text-white shadow-sm disabled:opacity-50" type="button" onClick={() => goPage(safePage + 1)} disabled={safePage === totalPages}>
+                    <button className="p-1.5 rounded bg-[#001e40] text-white shadow-sm disabled:opacity-50" type="button" aria-label="Trang sau" onClick={() => goPage(safePage + 1)} disabled={safePage === totalPages}>
                       <span className="material-symbols-outlined text-[18px]">chevron_right</span>
                     </button>
                   </div>
@@ -186,8 +188,9 @@ function UsersPage() {
                   <div className="space-y-1">
                     <label className="text-[11px] font-bold text-on-surface-variant uppercase tracking-widest pl-1">Họ và tên</label>
                     <input
-                      className="w-full bg-surface-container-highest border-none rounded-lg text-sm focus:ring-2 focus:ring-[#4edea3]/50 py-2.5"
+                      className="app-input"
                       placeholder="VD: Nguyễn Văn A"
+                      aria-invalid={!form.name?.trim()}
                       value={form.name}
                       disabled={!isAdmin}
                       onChange={(event) => setForm((prev) => ({ ...prev, name: event.target.value }))}
@@ -197,9 +200,10 @@ function UsersPage() {
                   <div className="space-y-1">
                     <label className="text-[11px] font-bold text-on-surface-variant uppercase tracking-widest pl-1">Email liên hệ</label>
                     <input
-                      className="w-full bg-surface-container-highest border-none rounded-lg text-sm focus:ring-2 focus:ring-[#4edea3]/50 py-2.5"
+                      className="app-input"
                       placeholder="email@foreman.vn"
                       type="email"
+                      aria-invalid={!form.email?.trim()}
                       value={form.email}
                       disabled={!isAdmin}
                       onChange={(event) => setForm((prev) => ({ ...prev, email: event.target.value }))}
@@ -209,9 +213,10 @@ function UsersPage() {
                   <div className="space-y-1">
                     <label className="text-[11px] font-bold text-on-surface-variant uppercase tracking-widest pl-1">Mật khẩu tạm thời</label>
                     <input
-                      className="w-full bg-surface-container-highest border-none rounded-lg text-sm focus:ring-2 focus:ring-[#4edea3]/50 py-2.5"
+                      className="app-input"
                       placeholder="••••••••"
                       type="password"
+                      aria-invalid={!form.password}
                       value={form.password}
                       disabled={!isAdmin}
                       onChange={(event) => setForm((prev) => ({ ...prev, password: event.target.value }))}
@@ -221,8 +226,9 @@ function UsersPage() {
                   <div className="space-y-1">
                     <label className="text-[11px] font-bold text-on-surface-variant uppercase tracking-widest pl-1">Phân quyền vai trò</label>
                     <select
-                      className="w-full bg-surface-container-highest border-none rounded-lg text-sm focus:ring-2 focus:ring-[#4edea3]/50 py-2.5"
+                      className="app-select"
                       value={form.role}
+                      aria-invalid={!form.role}
                       disabled={!isAdmin}
                       onChange={(event) => setForm((prev) => ({ ...prev, role: event.target.value }))}
                     >
@@ -236,7 +242,7 @@ function UsersPage() {
                   <button
                     className="w-full bg-primary hover:bg-primary-container text-[#4edea3] font-bold text-sm py-3 rounded-lg flex items-center justify-center space-x-2 shadow-lg shadow-black/10 transition-all active:scale-[0.98] disabled:opacity-50"
                     type="submit"
-                    disabled={!isAdmin || formLoading}
+                    disabled={!isAdmin || formLoading || formInvalid}
                   >
                     <span className="material-symbols-outlined text-[20px]">person_add</span>
                     <span>{formLoading ? "Đang tạo..." : "Xác nhận thêm mới"}</span>
@@ -275,7 +281,7 @@ function UsersPage() {
 
       {showHelp ? (
         <div className="app-modal-overlay z-[60]" onClick={() => setShowHelp(false)}>
-          <div className="app-modal-panel max-w-xl" onClick={(event) => event.stopPropagation()}>
+          <div className="app-modal-panel max-w-xl" role="dialog" aria-modal="true" aria-label="Hướng dẫn nhanh người dùng" onClick={(event) => event.stopPropagation()}>
             <div className="px-6 py-4 border-b border-slate-100"><h3 className="text-lg font-bold text-primary">Hướng dẫn nhanh</h3></div>
             <div className="px-6 py-5 text-sm text-slate-700 space-y-3">
               <p>1. Dùng ô tìm kiếm để lọc nhanh theo tên, email hoặc vai trò.</p>

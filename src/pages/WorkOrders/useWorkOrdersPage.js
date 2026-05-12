@@ -172,10 +172,6 @@ export function useWorkOrdersPage() {
   };
 
   useEffect(() => {
-    setPage(1);
-  }, [statusFilter, assetFilter, debouncedSearch]);
-
-  useEffect(() => {
     if (!notice.text) return undefined;
     const timer = setTimeout(() => setNotice({ type: "", text: "" }), 3500);
     return () => clearTimeout(timer);
