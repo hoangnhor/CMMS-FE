@@ -7,7 +7,9 @@
     "dev": "vite --configLoader native",
     "build": "vite build --configLoader native",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "lint:ci": "eslint . --max-warnings=0",
+    "test:ci": "playwright test --list"
   },
   "dependencies": {
     "@tailwindcss/forms": "^0.5.11",
