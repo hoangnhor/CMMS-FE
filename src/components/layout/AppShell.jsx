@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { getDisplayName, getInitials, mapRoleLabel } from "../../utils/userDisplay";
 
@@ -12,7 +12,11 @@ const NAV_ITEMS = [
 
 function NotificationPanel({ notifications }) {
   return (
-    <div className="absolute right-0 top-12 w-[min(24rem,calc(100vw-2rem))] rounded-xl border border-slate-200 bg-white p-3 shadow-xl">
+    <div
+      className="absolute right-0 top-12 w-[min(24rem,calc(100vw-2rem))] rounded-xl border border-slate-200 bg-white p-3 shadow-xl"
+      role="region"
+      aria-label="Thông báo hệ thống"
+    >
       <div className="border-b border-slate-100 px-2 pb-2 text-sm font-bold text-primary">
         Thông báo hệ thống
       </div>
@@ -122,6 +126,17 @@ function AppShell({
     setDrawerOpen(false);
   };
 
+  useEffect(() => {
+    if (!drawerOpen) return undefined;
+    const handleEsc = (event) => {
+      if (event.key === "Escape") {
+        setDrawerOpen(false);
+      }
+    };
+    document.addEventListener("keydown", handleEsc);
+    return () => document.removeEventListener("keydown", handleEsc);
+  }, [drawerOpen]);
+
   return (
     <div className="min-h-screen bg-[#eef3f8] text-on-surface">
       <div
@@ -137,6 +152,9 @@ function AppShell({
         className={`fixed inset-y-0 left-0 z-50 flex w-[17rem] flex-col bg-[#001e40] py-6 shadow-2xl shadow-black/20 transition-transform duration-200 lg:translate-x-0 ${
           drawerOpen ? "translate-x-0" : "-translate-x-full"
         }`}
+        role="dialog"
+        aria-modal={drawerOpen ? "true" : undefined}
+        aria-label="Điều hướng chính"
       >
         <ShellNav currentKey={currentKey} onNavigate={handleNavigate} onLogout={onLogout} />
       </aside>

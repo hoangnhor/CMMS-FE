@@ -14,7 +14,12 @@ function TableStateRow({ colSpan, type = "empty", message }) {
   return (
     <tr>
       <td colSpan={colSpan} className={`px-6 py-10 text-center ${tone}`}>
-        <div className="flex flex-col items-center gap-2" role={type === "error" ? "alert" : "status"}>
+        <div
+          className="flex flex-col items-center gap-2"
+          role={type === "error" ? "alert" : "status"}
+          aria-live={type === "loading" ? "polite" : "assertive"}
+          aria-atomic="true"
+        >
           <span className={`material-symbols-outlined text-2xl opacity-70 ${type === "loading" ? "animate-pulse" : ""}`}>
             {icon}
           </span>

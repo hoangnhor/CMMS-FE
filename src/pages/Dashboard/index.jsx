@@ -66,7 +66,7 @@ function DashboardPage() {
         onLogout={handleLogout}
       >
         <div className="shell-page-wrap space-y-8">
-          <div className="flex justify-between items-end">
+          <div className="flex flex-col gap-4 sm:flex-row sm:justify-between sm:items-end">
             <div>
               <h2 className="app-page-title">Bảng điều khiển Tổng quát</h2>
               <p className="app-page-subtitle">
@@ -97,7 +97,7 @@ function DashboardPage() {
             </div>
           ) : null}
 
-          {error ? <div className="app-notice app-notice-error">{error}</div> : null}
+          {error ? <div className="app-notice app-notice-error" role="alert">{error}</div> : null}
 
           <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
             {loading ? (
@@ -210,6 +210,7 @@ function DashboardPage() {
             </div>
             <div className="overflow-x-auto">
               <table className="w-full text-left">
+                <caption className="sr-only">Danh sách lệnh công việc gần đây</caption>
                 <thead>
                   <tr className="bg-surface-container-low/50">
                     <th className="sticky top-0 z-10 bg-surface-container-low/50 px-8 py-4 text-xs font-bold text-on-surface-variant uppercase tracking-wider">Mã Lệnh</th>
