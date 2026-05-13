@@ -30,6 +30,7 @@ export function useUsersPage() {
   const [formError, setFormError] = useState("");
   const [formLoading, setFormLoading] = useState(false);
   const [toggleLoadingId, setToggleLoadingId] = useState("");
+  const [deleteModal, setDeleteModal] = useState({ open: false, loading: false, error: "", user: null });
   const [page, setPage] = useState(1);
 
   const showNotice = (type, text) => setNotice({ type, text });
@@ -155,7 +156,7 @@ export function useUsersPage() {
     }
   };
 
-  const deleteUser = async (target) => {
+  const openDeleteModal = (target) => {
     if (!isAdmin) {
       showNotice("error", "Bạn không có quyền xóa người dùng.");
       return;
@@ -165,20 +166,28 @@ export function useUsersPage() {
       showNotice("error", "Không thể xóa chính tài khoản đang đăng nhập.");
       return;
     }
-    const accepted = window.confirm(
-      `Xóa người dùng ${target.email || target.name || "này"}? Hành động này không thể hoàn tác.`
-    );
-    if (!accepted) return;
+    setDeleteModal({ open: true, loading: false, error: "", user: target });
+  };
 
+  const closeDeleteModal = () => {
+    setDeleteModal({ open: false, loading: false, error: "", user: null });
+  };
+
+  const deleteUser = async () => {
+    const target = deleteModal.user;
+    if (!target?._id || deleteModal.loading) return;
     try {
-      setToggleLoadingId(target._id);
+      setDeleteModal((prev) => ({ ...prev, loading: true, error: "" }));
       await deleteUserApi(target._id);
       await loadUsers({ silent: true });
+      closeDeleteModal();
       showNotice("success", "Đã xóa người dùng.");
     } catch (err) {
-      showNotice("error", err?.response?.data?.message || err?.message || "Xóa người dùng thất bại.");
-    } finally {
-      setToggleLoadingId("");
+      setDeleteModal((prev) => ({
+        ...prev,
+        loading: false,
+        error: err?.response?.data?.message || err?.message || "Xóa người dùng thất bại.",
+      }));
     }
   };
 
@@ -202,6 +211,7 @@ export function useUsersPage() {
     formError,
     formLoading,
     toggleLoadingId,
+    deleteModal,
     page,
     setPage,
     filteredUsers,
@@ -214,6 +224,8 @@ export function useUsersPage() {
     handleLogout,
     createUser,
     toggleUserStatus,
+    openDeleteModal,
+    closeDeleteModal,
     deleteUser,
     totalUsers: users.length,
   };

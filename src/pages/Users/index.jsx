@@ -27,6 +27,7 @@ function UsersPage() {
     formError,
     formLoading,
     toggleLoadingId,
+    deleteModal,
     filteredUsers,
     safePage,
     totalPages,
@@ -37,6 +38,8 @@ function UsersPage() {
     handleLogout,
     createUser,
     toggleUserStatus,
+    openDeleteModal,
+    closeDeleteModal,
     deleteUser,
     totalUsers,
     setPage,
@@ -146,7 +149,7 @@ function UsersPage() {
                               className="ml-2 text-slate-400 hover:text-error transition-colors disabled:opacity-50"
                               type="button"
                               disabled={!isAdmin || toggleLoadingId === item._id || String(item._id) === String(user?._id)}
-                              onClick={() => deleteUser(item)}
+                              onClick={() => openDeleteModal(item)}
                               title="Xóa tài khoản"
                               aria-label={`Xóa tài khoản ${item.email}`}
                             >
@@ -273,6 +276,34 @@ function UsersPage() {
                 </button>
                 <p className="text-[10px] text-center text-slate-500 italic">Admin cần gửi mật khẩu tạm thời cho người dùng mới qua kênh nội bộ.</p>
               </form>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      {deleteModal.open ? (
+        <div className="app-modal-overlay z-[71]" onClick={closeDeleteModal}>
+          <div className="app-modal-panel max-w-lg" role="dialog" aria-modal="true" aria-label="Xóa người dùng" onClick={(event) => event.stopPropagation()}>
+            <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+              <h3 className="text-lg font-bold text-primary">Xóa người dùng</h3>
+              <button type="button" className="text-slate-500 hover:text-slate-700" onClick={closeDeleteModal}>
+                <span className="material-symbols-outlined">close</span>
+              </button>
+            </div>
+            <div className="px-6 py-5 space-y-3 text-sm">
+              {deleteModal.error ? <div className="app-notice-compact app-notice-error">{deleteModal.error}</div> : null}
+              <p className="text-slate-700">
+                Bạn có chắc muốn xóa người dùng <b>{deleteModal.user?.email || deleteModal.user?.name || "-"}</b>?
+              </p>
+              <p className="text-xs text-slate-500">Thao tác này không thể hoàn tác.</p>
+              <div className="flex justify-end gap-2 pt-2">
+                <button type="button" className="app-btn-secondary" onClick={closeDeleteModal} disabled={deleteModal.loading}>
+                  Hủy
+                </button>
+                <button type="button" className="app-btn-danger disabled:opacity-50" onClick={deleteUser} disabled={deleteModal.loading}>
+                  {deleteModal.loading ? "Đang xóa..." : "Xóa người dùng"}
+                </button>
+              </div>
             </div>
           </div>
         </div>
