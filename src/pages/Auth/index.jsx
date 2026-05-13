@@ -1,8 +1,10 @@
-﻿import { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
-import heroImage from "../../assets/hero.png";
 import "./style.css";
+
+const LOGIN_HERO_BG_URL =
+  "https://lh3.googleusercontent.com/aida-public/AB6AXuBM3vzE0m_UI_hPRB-6C4J7I3zvYb90rJejMIhauDjPUEp8EnQrDa9jJ9JbJLcbQK_SJi1ML6fOI2wtWdMnfKsLdU4CkcTv10NKJLdmyfra7slNhNa6IJnpblLrIB-puzTlgh1U2Xu--5DVrTYRDS-LCoEFAhskRoHdG4h5qLnUvDN71nU1ezUoVr34BPdWE9ff2uDwoqRyVe0RiaQWy4nyt3fmLpgn9G8l7ROCe-uxMGfijGrg__urA2m_VMwOZ6-WkMBEFid0aUpE";
 
 const QUICK_ACCOUNTS = [
   {
@@ -96,7 +98,7 @@ function SignInPage() {
             <img
               className="w-full h-full object-cover opacity-40 grayscale-[0.2]"
               data-alt="Modern high-tech factory interior with robotic arms and blue atmospheric lighting, shallow depth of field, premium industrial aesthetic"
-              src={heroImage}
+              src={LOGIN_HERO_BG_URL}
               alt="Factory"
             />
             <div className="absolute inset-0 bg-gradient-to-tr from-primary via-primary/80 to-transparent" />
@@ -136,7 +138,7 @@ function SignInPage() {
           </div>
 
           <div className="relative z-10 flex items-center justify-between text-[11px] text-on-primary-container/60 font-medium tracking-widest uppercase">
-            <span>Precision Architecture v2.4</span>
+            <span>Precision Architecture</span>
             <div className="flex gap-6">
               <span>Active Monitoring</span>
               <span>AI-Driven Maintenance</span>
@@ -189,13 +191,13 @@ function SignInPage() {
                       </div>
                       <div className="min-w-0">
                         <div className="flex items-center gap-1.5">
-                          <p className="text-[11px] font-bold text-primary leading-none">{account.label}</p>
-                          <span className="rounded-full bg-surface-container-low px-1 py-0.5 text-[7px] font-semibold uppercase tracking-wider text-on-surface-variant">
+                          <p className="truncate whitespace-nowrap text-[11px] font-bold text-primary leading-none">{account.label}</p>
+                          <span className="max-w-[110px] truncate whitespace-nowrap rounded-full bg-surface-container-low px-1 py-0.5 text-[7px] font-semibold uppercase tracking-wider text-on-surface-variant">
                             {account.role}
                           </span>
                         </div>
-                        <p className="mt-0.5 text-[10px] text-on-surface leading-snug">{account.name}</p>
-                        <p className="truncate text-[9px] text-on-surface-variant">{account.email}</p>
+                        <p className="mt-0.5 truncate whitespace-nowrap text-[10px] text-on-surface leading-snug">{account.name}</p>
+                        <p className="truncate whitespace-nowrap text-[9px] text-on-surface-variant">{account.email}</p>
                       </div>
                     </div>
                   </button>
@@ -319,10 +321,10 @@ function SignInPage() {
             <div className="mt-8 pt-4 border-t border-surface-container flex flex-col md:flex-row md:items-center justify-between gap-3">
               <div className="flex items-center gap-2 text-xs text-on-surface-variant">
                 <span className="material-symbols-outlined text-[16px]">support_agent</span>
-                <span>Hỗ trợ kỹ thuật: 1900 6789</span>
+                <span>Hỗ trợ kỹ thuật </span>
               </div>
               <div className="text-[10px] font-bold text-outline uppercase tracking-widest">
-                Phiên bản 4.0.2-Stable
+                Phiên bản hoàn thiện
               </div>
             </div>
           </div>
@@ -342,3 +344,4 @@ function SignInPage() {
 }
 
 export default SignInPage;
+

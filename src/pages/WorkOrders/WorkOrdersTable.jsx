@@ -22,22 +22,22 @@ function WorkOrdersTable({
   goPage,
 }) {
   return (
-    <section className="bg-surface-container-lowest rounded-xl shadow-xl shadow-black/[0.02] overflow-hidden">
+    <>
       {error ? <div className="px-6 py-3 text-sm text-error bg-error-container/40">{error}</div> : null}
-      <div className="w-full overflow-x-auto">
-        <table className="w-full min-w-[1080px] table-fixed text-left border-collapse">
+      <div className="app-table-wrap">
+        <table className="app-table min-w-[1080px]">
           <thead>
-            <tr className="bg-surface-container-low border-none text-on-surface-variant">
-              <th className="sticky top-0 z-10 bg-surface-container-low w-[19%] px-4 py-4 text-[10px] font-extrabold uppercase tracking-widest whitespace-nowrap">Lệnh công việc</th>
-              <th className="sticky top-0 z-10 bg-surface-container-low w-[16%] px-4 py-4 text-[10px] font-extrabold uppercase tracking-widest whitespace-nowrap">Tài sản</th>
-              <th className="sticky top-0 z-10 bg-surface-container-low w-[18%] px-4 py-4 text-[10px] font-extrabold uppercase tracking-widest whitespace-nowrap">Loại</th>
-              <th className="sticky top-0 z-10 bg-surface-container-low w-[9%] px-3 py-4 text-[10px] font-extrabold uppercase tracking-widest whitespace-nowrap">Ưu tiên</th>
-              <th className="sticky top-0 z-10 bg-surface-container-low w-[11%] px-4 py-4 text-[10px] font-extrabold uppercase tracking-widest whitespace-nowrap">Trạng thái</th>
-              <th className="sticky top-0 z-10 bg-surface-container-low w-[18%] px-4 py-4 text-[10px] font-extrabold uppercase tracking-widest whitespace-nowrap">Người thực hiện</th>
-              <th className="sticky top-0 z-10 bg-surface-container-low w-[9%] px-4 py-4 text-[10px] font-extrabold uppercase tracking-widest text-right whitespace-nowrap">Thao tác</th>
+            <tr className="app-table-head-row">
+              <th className="app-table-head-cell w-[19%]">Lệnh công việc</th>
+              <th className="app-table-head-cell w-[16%]">Tài sản</th>
+              <th className="app-table-head-cell w-[18%]">Loại</th>
+              <th className="app-table-head-cell w-[9%]">Ưu tiên</th>
+              <th className="app-table-head-cell w-[11%]">Trạng thái</th>
+              <th className="app-table-head-cell w-[18%]">Người thực hiện</th>
+              <th className="app-table-head-cell w-[9%] text-right">Thao tác</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-100">
+          <tbody className="app-table-body app-table-divider">
             {loading ? (
               <TableStateRow colSpan={7} type="loading" message="Đang tải lệnh công việc..." />
             ) : pageRows.length === 0 ? (
@@ -46,7 +46,7 @@ function WorkOrdersTable({
               const priority = mapPriority(item.priority);
               const status = mapStatus(item.status);
               return (
-                <tr className="hover:bg-surface-container-low/50 transition-colors" key={item._id}>
+                <tr className="app-table-body-row" key={item._id}>
                   <td className="px-4 py-4 overflow-hidden">
                     <p className="text-base font-bold text-primary leading-tight whitespace-nowrap truncate">{buildTitle(item)}</p>
                     <p className="text-xs text-on-surface-variant font-mono whitespace-nowrap truncate">{item.woCode}</p>
@@ -74,7 +74,7 @@ function WorkOrdersTable({
                       <div className="shell-user-avatar-initials shell-user-avatar-small border border-slate-200 shrink-0">
                         {getInitials(item.assignedTo || item.createdBy)}
                       </div>
-                      <span className="text-sm font-semibold whitespace-nowrap">{item.assignedTo?.name || item.createdBy?.name || "-"}</span>
+                      <span className="text-sm font-semibold whitespace-nowrap truncate">{item.assignedTo?.name || item.createdBy?.name || "-"}</span>
                     </div>
                   </td>
                   <td className="px-4 py-4 text-right whitespace-nowrap">
@@ -128,7 +128,7 @@ function WorkOrdersTable({
         </table>
       </div>
 
-      <div className="px-6 py-4 bg-surface-container-low flex justify-between items-center">
+      <div className="app-table-footer">
         <div className="text-xs text-on-surface-variant font-medium">
           Hiển thị <span className="font-bold text-primary">{totalItems === 0 ? 0 : (safePage - 1) * pageSize + 1}-{Math.min(totalItems, safePage * pageSize)}</span> trong số <span className="font-bold text-primary">{totalItems}</span> lệnh
         </div>
@@ -152,7 +152,7 @@ function WorkOrdersTable({
           </button>
         </div>
       </div>
-    </section>
+    </>
   );
 }
 

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuthStore } from "../../store/authStore";
-import { createUserApi, listUsersApi, updateUserStatusApi } from "../../services/user.api";
+import { createUserApi, deleteUserApi, listUsersApi, updateUserStatusApi } from "../../services/user.api";
 import { subscribeRealtime } from "../../services/realtime";
 import {
   PAGE_SIZE,
@@ -155,6 +155,33 @@ export function useUsersPage() {
     }
   };
 
+  const deleteUser = async (target) => {
+    if (!isAdmin) {
+      showNotice("error", "Bạn không có quyền xóa người dùng.");
+      return;
+    }
+    if (!target?._id) return;
+    if (String(target._id) === String(user?._id)) {
+      showNotice("error", "Không thể xóa chính tài khoản đang đăng nhập.");
+      return;
+    }
+    const accepted = window.confirm(
+      `Xóa người dùng ${target.email || target.name || "này"}? Hành động này không thể hoàn tác.`
+    );
+    if (!accepted) return;
+
+    try {
+      setToggleLoadingId(target._id);
+      await deleteUserApi(target._id);
+      await loadUsers({ silent: true });
+      showNotice("success", "Đã xóa người dùng.");
+    } catch (err) {
+      showNotice("error", err?.response?.data?.message || err?.message || "Xóa người dùng thất bại.");
+    } finally {
+      setToggleLoadingId("");
+    }
+  };
+
   return {
     user,
     isAdmin,
@@ -187,6 +214,7 @@ export function useUsersPage() {
     handleLogout,
     createUser,
     toggleUserStatus,
+    deleteUser,
     totalUsers: users.length,
   };
 }

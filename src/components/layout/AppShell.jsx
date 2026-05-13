@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { getDisplayName, getInitials, mapRoleLabel } from "../../utils/userDisplay";
+import { getDisplayName, getInitials } from "../../utils/userDisplay";
 
 const NAV_ITEMS = [
   { key: "dashboard", label: "Bảng điều khiển", icon: "dashboard", path: "/dashboard" },
@@ -49,10 +49,10 @@ function ShellNav({ currentKey, onNavigate, onLogout }) {
             </span>
           </div>
           <div>
-            <h1 className="shell-brand-title font-headline uppercase tracking-tighter text-white">
+            <h1 className="shell-brand-title font-headline tracking-tighter text-white">
               Digital Foreman
             </h1>
-            <p className="shell-brand-subtitle">Hệ thống Kỹ nghệ Số</p>
+            <p className="shell-brand-subtitle">Hệ thống Kỹ Thuật Số</p>
           </div>
         </div>
       </div>
@@ -115,6 +115,7 @@ function AppShell({
 }) {
   const navigate = useNavigate();
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const displayName = getDisplayName(user);
 
   const mobileCurrent = useMemo(
     () => NAV_ITEMS.find((item) => item.key === currentKey)?.label || "Digital Foreman",
@@ -225,9 +226,8 @@ function AppShell({
             </div>
 
             <div className="hidden items-center gap-3 border-l border-slate-200 pl-4 sm:flex">
-              <div className="text-right">
-                <p className="app-user-name">{getDisplayName(user)}</p>
-                <p className="app-user-role">{mapRoleLabel(user?.role)}</p>
+              <div className="min-w-[120px] h-9 text-right flex items-center justify-end">
+                <p className="app-user-name">{displayName}</p>
               </div>
               <div className="shell-user-avatar shell-user-avatar-initials ring-2 ring-surface-container">
                 {getInitials(user)}

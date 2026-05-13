@@ -1,3 +1,4 @@
+import { useState } from "react";
 import AppShell from "../../components/layout/AppShell";
 import { getInitials } from "../../utils/userDisplay";
 import { PAGE_SIZE, mapRoleText, mapRoleTone } from "./helpers";
@@ -6,6 +7,7 @@ import TableStateRow from "../../components/ui/TableStateRow";
 import "./style.css";
 
 function UsersPage() {
+  const [showCreatePanel, setShowCreatePanel] = useState(false);
   const {
     user,
     isAdmin,
@@ -35,6 +37,7 @@ function UsersPage() {
     handleLogout,
     createUser,
     toggleUserStatus,
+    deleteUser,
     totalUsers,
     setPage,
   } = useUsersPage();
@@ -50,7 +53,7 @@ function UsersPage() {
           setSearch(value);
           setPage(1);
         }}
-        searchPlaceholder="Tìm kiếm tài khoản, email hoặc vai trò..."
+        searchPlaceholder="Tìm kiếm người dùng, email hoặc vai trò..."
         notifications={notifications}
         notificationsRef={notificationsRef}
         showNotifications={showNotifications}
@@ -70,54 +73,35 @@ function UsersPage() {
           {error ? <div className="app-notice app-notice-error">{error}</div> : null}
           {!isAdmin ? <div className="app-notice app-notice-info">Trang người dùng chỉ dành cho quản trị viên (admin).</div> : null}
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-end">
-            <div className="lg:col-span-2">
-              <h2 className="app-page-title uppercase">Quản lý người dùng</h2>
-              <p className="app-page-subtitle">Phân quyền, theo dõi trạng thái và quản lý nhân sự trong hệ thống kỹ nghệ số chính xác.</p>
-            </div>
-
-            <div className="bg-surface-container-low rounded-xl p-6 flex items-center justify-between">
-              <div className="space-y-1">
-                <p className="text-xs font-bold text-on-surface-variant uppercase tracking-wider">Phân bổ nhân sự</p>
-                <div className="flex gap-2 items-center">
-                  <div className="w-2 h-2 rounded-full bg-[#4edea3]" />
-                  <span className="text-xs text-slate-600">Kỹ thuật: {totalUsers ? Math.round((roleStats.technician / totalUsers) * 100) : 0}%</span>
-                </div>
-              </div>
-
-              <div className="flex items-end gap-1 h-12">
-                <div className="w-3 bg-[#001e40] rounded-t-sm" style={{ height: `${Math.max(20, Math.min(100, roleStats.admin * 20))}%` }} />
-                <div className="w-3 bg-[#4edea3] rounded-t-sm" style={{ height: `${Math.max(20, Math.min(100, roleStats.technician * 6))}%` }} />
-                <div className="w-3 bg-secondary rounded-t-sm" style={{ height: `${Math.max(20, Math.min(100, roleStats.manager * 12))}%` }} />
-                <div className="w-3 bg-error rounded-t-sm" style={{ height: `${Math.max(20, Math.min(100, roleStats.accountant * 12))}%` }} />
-              </div>
-            </div>
+          <div className="mb-8">
+            <h1 className="app-page-title">Quản lý Người dùng</h1>
+            <p className="app-page-subtitle">Phân quyền, theo dõi trạng thái và quản lý nhân sự trong hệ thống kỹ nghệ số chính xác.</p>
           </div>
 
           <div className="grid grid-cols-1 xl:grid-cols-4 gap-8 items-start">
             <div className="xl:col-span-3">
-              <div className="bg-surface-container-lowest rounded-xl shadow-sm overflow-hidden">
-                <div className="overflow-x-auto">
-                  <table className="w-full min-w-[820px] text-left border-collapse">
+              <div className="app-surface-card">
+                <div className="app-table-wrap">
+                  <table className="app-table min-w-[820px]">
                     <thead>
-                      <tr className="bg-surface-container-low">
-                        <th className="px-6 py-4 text-[11px] font-bold text-on-surface-variant uppercase tracking-widest">Người dùng</th>
-                        <th className="px-6 py-4 text-[11px] font-bold text-on-surface-variant uppercase tracking-widest">Vai trò</th>
-                        <th className="px-6 py-4 text-[11px] font-bold text-on-surface-variant uppercase tracking-widest">Trạng thái</th>
-                        <th className="px-6 py-4 text-[11px] font-bold text-on-surface-variant uppercase tracking-widest">Hành động</th>
+                      <tr className="app-table-head-row">
+                        <th className="app-table-head-cell">Người dùng</th>
+                        <th className="app-table-head-cell">Vai trò</th>
+                        <th className="app-table-head-cell">Trạng thái</th>
+                        <th className="app-table-head-cell">Hành động</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-100/50">
+                    <tbody className="app-table-body app-table-divider">
                       {pagedUsers.map((item) => (
-                        <tr key={item._id} className="hover:bg-surface-container-lowest transition-colors">
+                        <tr key={item._id} className="app-table-body-row">
                           <td className="px-6 py-4">
                             <div className="flex items-center space-x-3">
                               <div className="w-10 h-10 rounded-lg shell-user-avatar-initials">
                                 {getInitials(item)}
                               </div>
-                              <div>
-                                <p className="text-sm font-bold text-primary">{item.name}</p>
-                                <p className="text-xs text-on-surface-variant">{item.email}</p>
+                              <div className="min-w-0">
+                                <p className="text-sm font-bold text-primary whitespace-nowrap truncate">{item.name}</p>
+                                <p className="text-xs text-on-surface-variant whitespace-nowrap truncate">{item.email}</p>
                               </div>
                             </div>
                           </td>
@@ -131,13 +115,23 @@ function UsersPage() {
                           <td className="px-6 py-4">
                             <div className="flex items-center space-x-2">
                               <span className={`w-2 h-2 rounded-full ${item.isActive ? "bg-tertiary-fixed-dim shadow-[0_0_8px_#4edea3]" : "bg-slate-300"}`} />
-                              <span className="text-xs font-medium text-slate-700">{item.isActive ? "Hoạt động" : "Tạm khóa"}</span>
+                              <span className="text-xs font-medium text-slate-700 whitespace-nowrap truncate">{item.isActive ? "Hoạt động" : "Tạm khóa"}</span>
                             </div>
                           </td>
 
                           <td className="px-6 py-4">
                             <button
                               className="text-slate-400 hover:text-primary transition-colors disabled:opacity-50"
+                              type="button"
+                              disabled={!isAdmin}
+                              onClick={() => setShowCreatePanel((prev) => !prev)}
+                              title="Thêm người dùng"
+                              aria-label="Mở form thêm người dùng"
+                            >
+                              <span className="material-symbols-outlined text-[20px]">person_add</span>
+                            </button>
+                            <button
+                              className="ml-2 text-slate-400 hover:text-primary transition-colors disabled:opacity-50"
                               type="button"
                               disabled={!isAdmin || toggleLoadingId === item._id}
                               onClick={() => toggleUserStatus(item)}
@@ -147,6 +141,16 @@ function UsersPage() {
                               <span className="material-symbols-outlined text-[20px]">
                                 {item.isActive ? "lock_person" : "lock_open"}
                               </span>
+                            </button>
+                            <button
+                              className="ml-2 text-slate-400 hover:text-error transition-colors disabled:opacity-50"
+                              type="button"
+                              disabled={!isAdmin || toggleLoadingId === item._id || String(item._id) === String(user?._id)}
+                              onClick={() => deleteUser(item)}
+                              title="Xóa tài khoản"
+                              aria-label={`Xóa tài khoản ${item.email}`}
+                            >
+                              <span className="material-symbols-outlined text-[20px]">delete</span>
                             </button>
                           </td>
                         </tr>
@@ -158,14 +162,23 @@ function UsersPage() {
                   </table>
                 </div>
 
-                <div className="px-6 py-4 bg-surface-container-low/50 flex justify-between items-center">
+                <div className="app-table-footer">
                   <span className="text-xs text-on-surface-variant">Hiển thị {filteredUsers.length === 0 ? 0 : (safePage - 1) * PAGE_SIZE + 1}-{Math.min(filteredUsers.length, safePage * PAGE_SIZE)} trên {filteredUsers.length} người dùng</span>
-                  <div className="flex space-x-2">
-                    <button className="p-1.5 rounded bg-white text-slate-400 hover:text-primary shadow-sm disabled:opacity-50" type="button" aria-label="Trang trước" onClick={() => goPage(safePage - 1)} disabled={safePage === 1}>
+                  <div className="flex items-center gap-1">
+                    <button className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-surface-container-highest text-slate-400 transition-colors disabled:opacity-40" type="button" aria-label="Trang đầu" onClick={() => goPage(1)} disabled={safePage === 1}>
+                      <span className="material-symbols-outlined text-[18px]">first_page</span>
+                    </button>
+                    <button className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-surface-container-highest text-slate-400 transition-colors disabled:opacity-40" type="button" aria-label="Trang trước" onClick={() => goPage(safePage - 1)} disabled={safePage === 1}>
                       <span className="material-symbols-outlined text-[18px]">chevron_left</span>
                     </button>
-                    <button className="p-1.5 rounded bg-[#001e40] text-white shadow-sm disabled:opacity-50" type="button" aria-label="Trang sau" onClick={() => goPage(safePage + 1)} disabled={safePage === totalPages}>
+                    <div className="flex items-center px-2">
+                      <button className="w-8 h-8 flex items-center justify-center rounded-lg bg-primary text-white text-xs font-bold" type="button" aria-current="page">{safePage}</button>
+                    </div>
+                    <button className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-surface-container-highest text-slate-400 transition-colors disabled:opacity-40" type="button" aria-label="Trang sau" onClick={() => goPage(safePage + 1)} disabled={safePage === totalPages}>
                       <span className="material-symbols-outlined text-[18px]">chevron_right</span>
+                    </button>
+                    <button className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-surface-container-highest text-slate-400 transition-colors disabled:opacity-40" type="button" aria-label="Trang cuối" onClick={() => goPage(totalPages)} disabled={safePage === totalPages}>
+                      <span className="material-symbols-outlined text-[18px]">last_page</span>
                     </button>
                   </div>
                 </div>
@@ -173,86 +186,7 @@ function UsersPage() {
             </div>
 
             <div className="xl:col-span-1">
-              <div className="bg-surface-container-low rounded-xl p-6 space-y-6">
-                <div>
-                  <h3 className="text-lg font-extrabold text-primary mb-1 uppercase tracking-tight flex items-center gap-2">
-                    <span className="material-symbols-outlined text-primary-container">add_task</span>
-                    Thêm người dùng
-                  </h3>
-                  <p className="text-xs text-on-surface-variant">Tạo tài khoản mới và cấp quyền truy cập.</p>
-                </div>
-
-                {formError ? <div className="app-notice-compact app-notice-error">{formError}</div> : null}
-
-                <form className="space-y-4" onSubmit={(e) => { e.preventDefault(); createUser(); }}>
-                  <div className="space-y-1">
-                    <label className="text-[11px] font-bold text-on-surface-variant uppercase tracking-widest pl-1">Họ và tên</label>
-                    <input
-                      className="app-input"
-                      placeholder="VD: Nguyễn Văn A"
-                      aria-invalid={!form.name?.trim()}
-                      value={form.name}
-                      disabled={!isAdmin}
-                      onChange={(event) => setForm((prev) => ({ ...prev, name: event.target.value }))}
-                    />
-                  </div>
-
-                  <div className="space-y-1">
-                    <label className="text-[11px] font-bold text-on-surface-variant uppercase tracking-widest pl-1">Email liên hệ</label>
-                    <input
-                      className="app-input"
-                      placeholder="email@foreman.vn"
-                      type="email"
-                      aria-invalid={!form.email?.trim()}
-                      value={form.email}
-                      disabled={!isAdmin}
-                      onChange={(event) => setForm((prev) => ({ ...prev, email: event.target.value }))}
-                    />
-                  </div>
-
-                  <div className="space-y-1">
-                    <label className="text-[11px] font-bold text-on-surface-variant uppercase tracking-widest pl-1">Mật khẩu tạm thời</label>
-                    <input
-                      className="app-input"
-                      placeholder="••••••••"
-                      type="password"
-                      aria-invalid={!form.password}
-                      value={form.password}
-                      disabled={!isAdmin}
-                      onChange={(event) => setForm((prev) => ({ ...prev, password: event.target.value }))}
-                    />
-                  </div>
-
-                  <div className="space-y-1">
-                    <label className="text-[11px] font-bold text-on-surface-variant uppercase tracking-widest pl-1">Phân quyền vai trò</label>
-                    <select
-                      className="app-select"
-                      value={form.role}
-                      aria-invalid={!form.role}
-                      disabled={!isAdmin}
-                      onChange={(event) => setForm((prev) => ({ ...prev, role: event.target.value }))}
-                    >
-                      <option value="technician">Kỹ thuật viên</option>
-                      <option value="site_manager">Quản lý</option>
-                      <option value="admin">Quản trị viên</option>
-                      <option value="accountant">Kế toán</option>
-                    </select>
-                  </div>
-
-                  <button
-                    className="w-full bg-primary hover:bg-primary-container text-[#4edea3] font-bold text-sm py-3 rounded-lg flex items-center justify-center space-x-2 shadow-lg shadow-black/10 transition-all active:scale-[0.98] disabled:opacity-50"
-                    type="submit"
-                    disabled={!isAdmin || formLoading || formInvalid}
-                  >
-                    <span className="material-symbols-outlined text-[20px]">person_add</span>
-                    <span>{formLoading ? "Đang tạo..." : "Xác nhận thêm mới"}</span>
-                  </button>
-
-                  <p className="text-[10px] text-center text-slate-500 italic">Admin cần gửi mật khẩu tạm thời cho người dùng mới qua kênh nội bộ.</p>
-                </form>
-              </div>
-
-              <div className="mt-8 bg-surface-container-lowest rounded-xl p-6 border border-slate-100">
+              <div className="app-surface-card p-6 border border-slate-100 mb-8">
                 <h4 className="text-[11px] font-bold text-on-surface-variant uppercase tracking-widest mb-6 text-center">Tỉ lệ vai trò</h4>
 
                 <div className="relative w-32 h-32 mx-auto">
@@ -274,6 +208,10 @@ function UsersPage() {
                   <div className="flex items-center space-x-2"><div className="w-2 h-2 rounded-sm bg-error" /><span className="text-[10px] font-medium">Kế toán ({roleStats.accountant})</span></div>
                 </div>
               </div>
+
+              <div className="app-surface-card border border-slate-200/70 p-6">
+                <p className="text-xs text-on-surface-variant text-center">Digital Foreman Hệ thống Kỹ Thuật Số</p>
+              </div>
             </div>
           </div>
         </div>
@@ -287,6 +225,54 @@ function UsersPage() {
               <p>1. Dùng ô tìm kiếm để lọc nhanh theo tên, email hoặc vai trò.</p>
               <p>2. Chỉ admin mới được tạo tài khoản và khóa/mở khóa người dùng.</p>
               <p>3. Chấm ba dọc ở cột Hành động để đổi trạng thái người dùng.</p>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      {showCreatePanel ? (
+        <div className="app-modal-overlay z-[70]" onClick={() => setShowCreatePanel(false)}>
+          <div className="app-modal-panel max-w-xl" role="dialog" aria-modal="true" aria-label="Thêm người dùng" onClick={(event) => event.stopPropagation()}>
+            <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+              <h3 className="text-lg font-extrabold text-primary uppercase tracking-tight flex items-center gap-2">
+                <span className="material-symbols-outlined text-primary-container">add_task</span>
+                Thêm người dùng
+              </h3>
+              <button type="button" className="text-slate-500 hover:text-slate-700" onClick={() => setShowCreatePanel(false)} aria-label="Đóng form thêm người dùng">
+                <span className="material-symbols-outlined">close</span>
+              </button>
+            </div>
+            <div className="px-6 py-5 space-y-4">
+              <p className="text-xs text-on-surface-variant">Tạo tài khoản mới và cấp quyền truy cập.</p>
+              {formError ? <div className="app-notice-compact app-notice-error">{formError}</div> : null}
+              <form className="space-y-4" onSubmit={(e) => { e.preventDefault(); createUser(); }}>
+                <div className="space-y-1">
+                  <label className="text-[11px] font-bold text-on-surface-variant uppercase tracking-widest pl-1">Họ và tên</label>
+                  <input className="app-input" placeholder="VD: Nguyễn Văn A" aria-invalid={!form.name?.trim()} value={form.name} disabled={!isAdmin} onChange={(event) => setForm((prev) => ({ ...prev, name: event.target.value }))} />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[11px] font-bold text-on-surface-variant uppercase tracking-widest pl-1">Email liên hệ</label>
+                  <input className="app-input" placeholder="email@foreman.vn" type="email" aria-invalid={!form.email?.trim()} value={form.email} disabled={!isAdmin} onChange={(event) => setForm((prev) => ({ ...prev, email: event.target.value }))} />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[11px] font-bold text-on-surface-variant uppercase tracking-widest pl-1">Mật khẩu tạm thời</label>
+                  <input className="app-input" placeholder="••••••••" type="password" aria-invalid={!form.password} value={form.password} disabled={!isAdmin} onChange={(event) => setForm((prev) => ({ ...prev, password: event.target.value }))} />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[11px] font-bold text-on-surface-variant uppercase tracking-widest pl-1">Phân quyền vai trò</label>
+                  <select className="app-select" value={form.role} aria-invalid={!form.role} disabled={!isAdmin} onChange={(event) => setForm((prev) => ({ ...prev, role: event.target.value }))}>
+                    <option value="technician">Kỹ thuật viên</option>
+                    <option value="site_manager">Quản lý</option>
+                    <option value="admin">Quản trị viên</option>
+                    <option value="accountant">Kế toán</option>
+                  </select>
+                </div>
+                <button className="w-full bg-primary hover:bg-primary-container text-[#4edea3] font-bold text-sm py-3 rounded-lg flex items-center justify-center space-x-2 shadow-lg shadow-black/10 transition-all active:scale-[0.98] disabled:opacity-50" type="submit" disabled={!isAdmin || formLoading || formInvalid}>
+                  <span className="material-symbols-outlined text-[20px]">person_add</span>
+                  <span>{formLoading ? "Đang tạo..." : "Xác nhận thêm mới"}</span>
+                </button>
+                <p className="text-[10px] text-center text-slate-500 italic">Admin cần gửi mật khẩu tạm thời cho người dùng mới qua kênh nội bộ.</p>
+              </form>
             </div>
           </div>
         </div>

@@ -15,38 +15,38 @@ function AssetTable({
   goPage,
 }) {
   return (
-    <div className="bg-white rounded-xl overflow-hidden border border-slate-200/70 shadow-sm">
-      <div className="w-full overflow-x-auto">
-      <table className="w-full min-w-[980px] text-left border-collapse">
-        <thead className="bg-surface-container-low">
+    <>
+      <div className="app-table-wrap">
+      <table className="app-table min-w-[980px]">
+        <thead>
           <tr>
-            <th className="sticky top-0 z-10 bg-surface-container-low px-6 py-4 text-[10px] font-extrabold text-on-surface-variant uppercase tracking-widest">Mã tài sản</th>
-            <th className="sticky top-0 z-10 bg-surface-container-low px-6 py-4 text-[10px] font-extrabold text-on-surface-variant uppercase tracking-widest">Tên tài sản</th>
-            <th className="sticky top-0 z-10 bg-surface-container-low px-6 py-4 text-[10px] font-extrabold text-on-surface-variant uppercase tracking-widest">Loại</th>
-            <th className="sticky top-0 z-10 bg-surface-container-low px-6 py-4 text-[10px] font-extrabold text-on-surface-variant uppercase tracking-widest">Trạng thái</th>
-            <th className="sticky top-0 z-10 bg-surface-container-low px-6 py-4 text-[10px] font-extrabold text-on-surface-variant uppercase tracking-widest">Vị trí</th>
-            <th className="sticky top-0 z-10 bg-surface-container-low px-6 py-4 text-[10px] font-extrabold text-on-surface-variant uppercase tracking-widest text-right">Giá trị</th>
-            <th className="sticky top-0 z-10 bg-surface-container-low px-6 py-4 text-[10px] font-extrabold text-on-surface-variant uppercase tracking-widest text-center">Thao tác</th>
+            <th className="app-table-head-cell">Mã tài sản</th>
+            <th className="app-table-head-cell">Tên tài sản</th>
+            <th className="app-table-head-cell">Loại</th>
+            <th className="app-table-head-cell">Trạng thái</th>
+            <th className="app-table-head-cell">Vị trí</th>
+            <th className="app-table-head-cell text-right">Giá trị</th>
+            <th className="app-table-head-cell text-center">Thao tác</th>
           </tr>
         </thead>
-        <tbody className="divide-y divide-slate-100">
+        <tbody className="app-table-body app-table-divider">
           {pagedAssets.map((item) => {
             const status = mapStatusLabel(item.status);
             return (
-              <tr className="hover:bg-surface-container-low transition-colors group" key={item._id || item.assetCode}>
-                <td className="px-6 py-4 font-mono text-xs font-bold text-primary">{item.assetCode || "-"}</td>
+              <tr className="app-table-body-row group" key={item._id || item.assetCode}>
+                <td className="px-6 py-4 font-mono text-xs font-bold text-primary whitespace-nowrap truncate">{item.assetCode || "-"}</td>
                 <td className="px-6 py-4">
-                  <div className="font-bold text-primary">{item.name || "-"}</div>
-                  <div className="text-[10px] text-on-surface-variant">S/N: {item.serialNumber || "-"}</div>
+                  <div className="font-bold text-primary whitespace-nowrap truncate">{item.name || "-"}</div>
+                  <div className="text-[10px] text-on-surface-variant whitespace-nowrap truncate">S/N: {item.serialNumber || "-"}</div>
                 </td>
-                <td className="px-6 py-4 text-sm text-on-secondary-container">{mapTypeLabel(item.assetType)}</td>
-                <td className="px-6 py-4">
-                  <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10px] font-bold ${status.cls}`}>
+                <td className="px-6 py-4 text-sm text-on-secondary-container whitespace-nowrap truncate">{mapTypeLabel(item.assetType)}</td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <span className={`inline-flex items-center gap-1.5 whitespace-nowrap px-2.5 py-1 rounded-md text-[10px] font-bold ${status.cls}`}>
                     <span className={`w-1.5 h-1.5 rounded-full ${status.dot}`}></span>
                     {status.text}
                   </span>
                 </td>
-                <td className="px-6 py-4 text-sm text-on-secondary-container">{item.location || "-"}</td>
+                <td className="px-6 py-4 text-sm text-on-secondary-container whitespace-nowrap truncate">{item.location || "-"}</td>
                 <td className="px-6 py-4 text-sm font-bold text-primary text-right tabular-nums">{toCurrency(item.purchasePrice)}</td>
                 <td className="px-6 py-4">
                   <div className="flex justify-center gap-2">
@@ -72,7 +72,7 @@ function AssetTable({
       </table>
       </div>
 
-      <div className="px-6 py-4 bg-surface-container-low flex justify-between items-center">
+      <div className="app-table-footer">
         <div className="text-xs text-on-surface-variant font-medium">
           Hiển thị <span className="font-bold text-primary">{totalItems === 0 ? 0 : (safePage - 1) * pageSize + 1}-{Math.min(totalItems, safePage * pageSize)}</span> trong số <span className="font-bold text-primary">{totalItems}</span> tài sản
         </div>
@@ -86,7 +86,7 @@ function AssetTable({
           <button className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-surface-container-highest text-slate-400 transition-colors" type="button" aria-label="Trang cuối" onClick={() => goPage(totalPages)} disabled={safePage === totalPages}><span className="material-symbols-outlined text-[18px]">last_page</span></button>
         </div>
       </div>
-    </div>
+    </>
   );
 }
 

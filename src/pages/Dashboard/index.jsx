@@ -57,7 +57,7 @@ function DashboardPage() {
         user={user}
         search={searchTerm}
         onSearchChange={setSearchTerm}
-        searchPlaceholder="Tìm kiếm tài sản, mã số hoặc vị trí..."
+        searchPlaceholder="Tìm kiếm lệnh công việc, tài sản hoặc người thực hiện..."
         notifications={notifications.map(mapNotificationTone)}
         notificationsRef={notificationsRef}
         showNotifications={showNotifications}
@@ -66,9 +66,9 @@ function DashboardPage() {
         onLogout={handleLogout}
       >
         <div className="shell-page-wrap space-y-8">
-          <div className="flex flex-col gap-4 sm:flex-row sm:justify-between sm:items-end">
+          <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:justify-between sm:items-end">
             <div>
-              <h2 className="app-page-title">Bảng điều khiển Tổng quát</h2>
+              <h1 className="app-page-title">Bảng điều khiển Tổng quát</h1>
               <p className="app-page-subtitle">
                 Dữ liệu vận hành thời gian thực tính đến {subtitleTime} hôm nay.
                 {refreshing ? " (Đang cập nhật...)" : ""}
@@ -110,54 +110,51 @@ function DashboardPage() {
               </>
             ) : (
               <>
-                <div className="bg-white p-6 rounded-xl border border-slate-200/70 shadow-sm transition-all hover:translate-y-[-4px]">
-              <div className="flex justify-between items-start mb-4">
-                <div className="p-2 bg-surface-container-low rounded-lg text-primary"><span className="material-symbols-outlined text-2xl">precision_manufacturing</span></div>
-                <div className="h-6 w-16 opacity-30 flex items-end gap-1"><div className="w-1 bg-primary h-2"></div><div className="w-1 bg-primary h-4"></div><div className="w-1 bg-primary h-3"></div><div className="w-1 bg-primary h-5"></div><div className="w-1 bg-primary h-4"></div></div>
-              </div>
-              <p className="text-xs font-medium text-on-surface-variant uppercase tracking-wider">Tổng số tài sản</p>
-              <h3 className="text-2xl font-bold text-primary mt-1 tabular-nums">{stats.totalAssets.toLocaleString("vi-VN")}</h3>
-            </div>
+                  <div className="app-kpi-card border-l-4 border-[#111827]">
+                    <p className="app-kpi-title">Tổng số tài sản</p>
+                    <div className="flex items-end gap-3">
+                      <span className="app-kpi-value tabular-nums">{stats.totalAssets.toLocaleString("vi-VN")}</span>
+                    </div>
+                  </div>
 
-            <div className="bg-white p-6 rounded-xl border border-slate-200/70 shadow-sm transition-all hover:translate-y-[-4px]">
-              <div className="flex justify-between items-start mb-4">
-                <div className="p-2 bg-tertiary-fixed-dim/10 text-tertiary-fixed-dim rounded-lg"><span className="material-symbols-outlined text-2xl" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span></div>
-                <div className="h-6 w-16 opacity-40 flex items-end gap-1"><div className="w-1 bg-[#4edea3] h-4"></div><div className="w-1 bg-[#4edea3] h-5"></div><div className="w-1 bg-[#4edea3] h-5"></div><div className="w-1 bg-[#4edea3] h-4"></div><div className="w-1 bg-[#4edea3] h-5"></div></div>
-              </div>
-              <p className="text-xs font-medium text-on-surface-variant uppercase tracking-wider">Đang hoạt động</p>
-              <h3 className="text-2xl font-bold text-primary mt-1 tabular-nums">{stats.activeAssets.toLocaleString("vi-VN")}</h3>
-              <p className="text-[10px] font-bold text-tertiary-fixed-dim mt-2 bg-tertiary-fixed-dim/10 px-2 py-0.5 rounded w-fit">{`${stats.activeRate}% Hiệu suất`}</p>
-            </div>
+                  <div className="app-kpi-card border-l-4 border-[#4edea3]">
+                    <p className="app-kpi-title">Đang hoạt động</p>
+                    <div className="flex items-end gap-3">
+                      <span className="app-kpi-value tabular-nums">{stats.activeAssets.toLocaleString("vi-VN")}</span>
+                      <span className="text-[10px] font-bold text-tertiary-fixed-dim mb-1 bg-tertiary-fixed-dim/10 px-2 py-0.5 rounded whitespace-nowrap">{`${stats.activeRate}% Hiệu suất`}</span>
+                    </div>
+                  </div>
 
-            <div className="bg-white p-6 rounded-xl border border-slate-200/70 shadow-sm transition-all hover:translate-y-[-4px]">
-              <div className="flex justify-between items-start mb-4"><div className="p-2 bg-amber-100 text-amber-600 rounded-lg"><span className="material-symbols-outlined text-2xl">warning</span></div><div className="h-6 w-16 opacity-30 flex items-end gap-1"><div className="w-1 bg-amber-600 h-2"></div><div className="w-1 bg-amber-600 h-3"></div><div className="w-1 bg-amber-600 h-5"></div><div className="w-1 bg-amber-600 h-4"></div><div className="w-1 bg-amber-600 h-3"></div></div></div>
-              <p className="text-xs font-medium text-on-surface-variant uppercase tracking-wider">Cần bảo trì</p>
-              <h3 className="text-2xl font-bold text-primary mt-1 tabular-nums">{stats.maintenanceNeeded.toLocaleString("vi-VN")}</h3>
-            </div>
+                  <div className="app-kpi-card border-l-4 border-[#f59e0b]">
+                    <p className="app-kpi-title">Cần bảo trì</p>
+                    <div className="flex items-end gap-3">
+                      <span className="app-kpi-value tabular-nums">{stats.maintenanceNeeded.toLocaleString("vi-VN")}</span>
+                    </div>
+                  </div>
 
-            <div className="bg-white p-6 rounded-xl border border-slate-200/70 shadow-sm transition-all hover:translate-y-[-4px]">
-              <div className="flex justify-between items-start mb-4"><div className="p-2 bg-secondary-container text-secondary rounded-lg"><span className="material-symbols-outlined text-2xl">pending_actions</span></div><div className="h-6 w-16 opacity-30 flex items-end gap-1"><div className="w-1 bg-secondary h-4"></div><div className="w-1 bg-secondary h-3"></div><div className="w-1 bg-secondary h-4"></div><div className="w-1 bg-secondary h-5"></div><div className="w-1 bg-secondary h-2"></div></div></div>
-              <p className="text-xs font-medium text-on-surface-variant uppercase tracking-wider">Lệnh công việc mở</p>
-              <h3 className="text-2xl font-bold text-primary mt-1 tabular-nums">{stats.openOrders.toLocaleString("vi-VN")}</h3>
-            </div>
+                  <div className="app-kpi-card border-l-4 border-primary">
+                    <p className="app-kpi-title">Lệnh công việc mở</p>
+                    <div className="flex items-end gap-3">
+                      <span className="app-kpi-value tabular-nums">{stats.openOrders.toLocaleString("vi-VN")}</span>
+                    </div>
+                  </div>
 
-            <div className="bg-white p-6 rounded-xl border border-slate-200/70 shadow-sm transition-all hover:translate-y-[-4px]">
-              <div className="flex justify-between items-start mb-4"><div className="p-2 bg-error-container text-error rounded-lg"><span className="material-symbols-outlined text-2xl">error</span></div><div className="h-6 w-16 opacity-30 flex items-end gap-1"><div className="w-1 bg-error h-1"></div><div className="w-1 bg-error h-2"></div><div className="w-1 bg-error h-3"></div><div className="w-1 bg-error h-1"></div><div className="w-1 bg-error h-2"></div></div></div>
-              <p className="text-xs font-medium text-on-surface-variant uppercase tracking-wider">Bảo trì quá hạn</p>
-              <h3 className="text-2xl font-bold text-error mt-1 tabular-nums">{stats.overdueOrders.toLocaleString("vi-VN")}</h3>
+                  <div className="app-kpi-card border-l-4 border-[#b91c1c]">
+                    <p className="app-kpi-title">Bảo trì quá hạn</p>
+                    <div className="flex items-end gap-3">
+                      <span className="app-kpi-value text-error tabular-nums">{stats.overdueOrders.toLocaleString("vi-VN")}</span>
+                    </div>
+                  </div>
+                </>
+              )}
             </div>
-              </>
-            )}
-          </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <div className="lg:col-span-2 bg-white p-8 rounded-xl border border-slate-200/70 shadow-sm">
-              <div className="flex justify-between items-center mb-10">
-                <div>
-                  <h4 className="text-lg font-bold text-primary">Tiến độ lệnh công việc</h4>
-                  <p className="text-xs text-on-surface-variant">Thống kê trong 7 ngày qua</p>
-                </div>
-                <div className="flex gap-4">
+              <div className="mb-10">
+                <h4 className="text-lg font-bold text-primary">Tiến độ lệnh công việc</h4>
+                <p className="text-xs text-on-surface-variant">Thống kê trong 7 ngày qua</p>
+                <div className="mt-3 flex items-center gap-4 whitespace-nowrap">
                   <div className="flex items-center gap-2 text-xs text-on-surface-variant"><span className="w-3 h-3 bg-primary-container rounded-sm"></span> Hoàn thành</div>
                   <div className="flex items-center gap-2 text-xs text-on-surface-variant"><span className="w-3 h-3 bg-tertiary-fixed-dim rounded-sm"></span> Đang thực hiện</div>
                 </div>
@@ -200,37 +197,37 @@ function DashboardPage() {
             </div>
           </div>
 
-          <div className="bg-white rounded-xl overflow-hidden border border-slate-200/70 shadow-sm">
-            <div className="px-8 py-6 flex justify-between items-center bg-white border-b border-surface-container-low">
+          <div className="app-surface-card">
+            <div className="px-8 py-6 border-b border-surface-container-low">
               <h4 className="text-lg font-bold text-primary">Lệnh công việc gần đây</h4>
-              <button className="text-sm font-semibold text-on-primary-container hover:text-primary transition-colors flex items-center gap-1" type="button" onClick={() => navigate("/work-orders")}>
+              <button className="mt-2 text-sm font-semibold text-on-primary-container hover:text-primary transition-colors flex items-center gap-1" type="button" onClick={() => navigate("/work-orders")}>
                 {searchTerm.trim() ? `Kết quả: ${filteredWorkOrders.length}` : "Xem tất cả"}
                 <span className="material-symbols-outlined text-sm">arrow_forward_ios</span>
               </button>
             </div>
-            <div className="overflow-x-auto">
-              <table className="w-full text-left">
+            <div className="app-table-wrap">
+              <table className="app-table min-w-[920px]">
                 <caption className="sr-only">Danh sách lệnh công việc gần đây</caption>
                 <thead>
-                  <tr className="bg-surface-container-low/50">
-                    <th className="sticky top-0 z-10 bg-surface-container-low/50 px-8 py-4 text-xs font-bold text-on-surface-variant uppercase tracking-wider">Mã Lệnh</th>
-                    <th className="sticky top-0 z-10 bg-surface-container-low/50 px-8 py-4 text-xs font-bold text-on-surface-variant uppercase tracking-wider">Tên Tài Sản</th>
-                    <th className="sticky top-0 z-10 bg-surface-container-low/50 px-8 py-4 text-xs font-bold text-on-surface-variant uppercase tracking-wider">Loại</th>
-                    <th className="sticky top-0 z-10 bg-surface-container-low/50 px-8 py-4 text-xs font-bold text-on-surface-variant uppercase tracking-wider">Người thực hiện</th>
-                    <th className="sticky top-0 z-10 bg-surface-container-low/50 px-8 py-4 text-xs font-bold text-on-surface-variant uppercase tracking-wider">Độ ưu tiên</th>
-                    <th className="sticky top-0 z-10 bg-surface-container-low/50 px-8 py-4 text-xs font-bold text-on-surface-variant uppercase tracking-wider">Trạng thái</th>
+                  <tr className="app-table-head-row">
+                    <th className="app-table-head-cell px-8">Mã Lệnh</th>
+                    <th className="app-table-head-cell px-8">Tên Tài Sản</th>
+                    <th className="app-table-head-cell px-8">Loại</th>
+                    <th className="app-table-head-cell px-8">Người thực hiện</th>
+                    <th className="app-table-head-cell px-8">Độ ưu tiên</th>
+                    <th className="app-table-head-cell px-8">Trạng thái</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-surface-container-low">
+                <tbody className="app-table-body app-table-divider">
                   {filteredWorkOrders.map((wo) => {
                     const priority = mapPriority(wo.priority);
                     const status = mapStatus(wo.status);
                     return (
-                      <tr className="hover:bg-surface-container-low/30 transition-colors" key={wo._id || wo.woCode}>
-                        <td className="px-8 py-4 text-sm font-bold text-primary">{wo.woCode || "-"}</td>
-                        <td className="px-8 py-4"><div className="flex items-center gap-3"><div className="w-8 h-8 rounded bg-surface-container-low flex items-center justify-center text-slate-400"><span className="material-symbols-outlined text-sm">settings_input_component</span></div><span className="text-sm font-medium">{wo.assetId?.name || "-"}</span></div></td>
-                        <td className="px-8 py-4 text-sm text-on-surface-variant">{wo.woType || "-"}</td>
-                        <td className="px-8 py-4 text-sm">{wo.assignedTo?.name || wo.createdBy?.name || "-"}</td>
+                      <tr className="app-table-body-row" key={wo._id || wo.woCode}>
+                        <td className="px-8 py-4 text-sm font-bold text-primary whitespace-nowrap truncate">{wo.woCode || "-"}</td>
+                        <td className="px-8 py-4"><div className="flex items-center gap-3 min-w-0"><div className="w-8 h-8 rounded bg-surface-container-low flex items-center justify-center text-slate-400 shrink-0"><span className="material-symbols-outlined text-sm">settings_input_component</span></div><span className="text-sm font-medium whitespace-nowrap truncate">{wo.assetId?.name || "-"}</span></div></td>
+                        <td className="px-8 py-4 text-sm text-on-surface-variant whitespace-nowrap truncate">{wo.woType || "-"}</td>
+                        <td className="px-8 py-4 text-sm whitespace-nowrap truncate">{wo.assignedTo?.name || wo.createdBy?.name || "-"}</td>
                         <td className="px-8 py-4">
                           <span className={`inline-flex items-center gap-1 whitespace-nowrap ${priority.tone} text-[11px] font-black uppercase`}>
                             <span className={`w-1.5 h-1.5 rounded-full ${priority.dot}`}></span>

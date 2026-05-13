@@ -2,10 +2,12 @@ import AppShell from "../../components/layout/AppShell";
 import WorkOrderModals from "./WorkOrderModals";
 import WorkOrdersTable from "./WorkOrdersTable";
 import { useWorkOrdersPage } from "./useWorkOrdersPage";
+import { mapPriority, mapStatus, mapTriggerLabel, mapTypeLabel } from "./helpers";
 import "./style.css";
 import KpiSkeletonCard from "../../components/ui/KpiSkeletonCard";
 
 function WorkOrdersPage() {
+  const controlBaseClass = "app-toolbar-control";
   const {
     user,
     canCreateWorkOrder,
@@ -81,6 +83,30 @@ function WorkOrdersPage() {
     createWorkOrder,
   } = useWorkOrdersPage();
 
+  const exportCsv = () => {
+    const headers = ["Mã lệnh", "Tài sản", "Loại", "Ưu tiên", "Trạng thái", "Người thực hiện"];
+    const rows = pageRows.map((item) => [
+      item.woCode || "",
+      item.assetId?.name || "",
+      `${mapTypeLabel(item.woType)} · ${mapTriggerLabel(item.triggerSource)}`,
+      mapPriority(item.priority).label || "",
+      mapStatus(item.status).label || "",
+      item.assignedTo?.name || item.createdBy?.name || "",
+    ]);
+    const csv = [headers, ...rows]
+      .map((line) => line.map((value) => `"${String(value ?? "").replace(/"/g, '""')}"`).join(","))
+      .join("\n");
+    const blob = new Blob([`\uFEFF${csv}`], { type: "text/csv;charset=utf-8;" });
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `work_orders_${new Date().toISOString().slice(0, 10)}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    window.URL.revokeObjectURL(url);
+  };
+
   return (
     <>
       <AppShell
@@ -91,7 +117,7 @@ function WorkOrdersPage() {
           setSearch(value);
           goPage(1);
         }}
-        searchPlaceholder="Tìm kiếm tài sản, mã số hoặc vị trí..."
+        searchPlaceholder="Tìm kiếm lệnh, tài sản hoặc người thực hiện..."
         notifications={notifications}
         notificationsRef={notificationsRef}
         showNotifications={showNotifications}
@@ -113,8 +139,11 @@ function WorkOrdersPage() {
               </button>
             </div>
           ) : null}
+          <div className="mb-8">
+            <h1 className="app-page-title">Quản lý Lệnh công việc</h1>
+            <p className="app-page-subtitle">Theo dõi, điều phối và kiểm soát tiến độ thực hiện lệnh công việc toàn nhà máy.</p>
+          </div>
           <section className="mb-10">
-            <h2 className="app-page-title mb-6">Tóm tắt vận hành hôm nay</h2>
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
               {loading ? (
                 <>
@@ -125,33 +154,33 @@ function WorkOrdersPage() {
                 </>
               ) : (
                 <>
-                  <div className="bg-surface-container-lowest p-6 rounded-xl shadow-sm border-l-4 border-tertiary-fixed-dim">
-                <p className="text-sm font-medium text-on-surface-variant mb-1">Lệnh đang chạy</p>
+                  <div className="app-kpi-card border-l-4 border-tertiary-fixed-dim">
+                <p className="app-kpi-title">Lệnh đang chạy</p>
                 <div className="flex items-end justify-between">
-                  <span className="text-3xl font-bold text-primary">{stats.inProgress}</span>
+                  <span className="app-kpi-value">{stats.inProgress}</span>
                   <span className="text-[#4edea3] text-xs font-bold bg-[#4edea3]/10 px-2 py-1 rounded">+{stats.todayNew} mới</span>
                 </div>
               </div>
-              <div className="bg-surface-container-lowest p-6 rounded-xl shadow-sm border-l-4 border-amber-500">
-                <p className="text-sm font-medium text-on-surface-variant mb-1">Chờ phê duyệt</p>
+              <div className="app-kpi-card border-l-4 border-amber-500">
+                <p className="app-kpi-title">Chờ phê duyệt</p>
                 <div className="flex items-end justify-between">
-                  <span className="text-3xl font-bold text-primary">{stats.pending}</span>
+                  <span className="app-kpi-value">{stats.pending}</span>
                   <span className="text-amber-600 text-xs font-bold bg-amber-100 px-2 py-1 rounded">Ưu tiên cao</span>
                 </div>
               </div>
-              <div className="bg-surface-container-lowest p-6 rounded-xl shadow-sm border-l-4 border-primary">
-                <p className="text-sm font-medium text-on-surface-variant mb-1">Hiệu suất hoàn thành</p>
+              <div className="app-kpi-card border-l-4 border-primary">
+                <p className="app-kpi-title">Hiệu suất hoàn thành</p>
                 <div className="flex items-end justify-between">
-                  <span className="text-3xl font-bold text-primary">{stats.doneRate}%</span>
+                  <span className="app-kpi-value">{stats.doneRate}%</span>
                   <div className="w-16 bg-slate-100 h-1.5 rounded-full overflow-hidden">
                     <div className="bg-[#4edea3] h-full" style={{ width: `${stats.doneRate}%` }}></div>
                   </div>
                 </div>
               </div>
-              <div className="bg-surface-container-lowest p-6 rounded-xl shadow-sm border-l-4 border-error">
-                <p className="text-sm font-medium text-on-surface-variant mb-1">Sự cố kỹ thuật</p>
+              <div className="app-kpi-card border-l-4 border-error">
+                <p className="app-kpi-title">Sự cố kỹ thuật</p>
                 <div className="flex items-end justify-between">
-                  <span className="text-3xl font-bold text-primary">{stats.urgentOpen}</span>
+                  <span className="app-kpi-value">{stats.urgentOpen}</span>
                   <span className="text-error text-xs font-bold bg-error-container px-2 py-1 rounded">Khẩn cấp</span>
                 </div>
               </div>
@@ -160,44 +189,49 @@ function WorkOrdersPage() {
             </div>
           </section>
 
-          <section className="mb-8 flex flex-wrap items-center gap-4">
-            <button className="flex items-center space-x-2 bg-surface-container-high px-4 py-2 rounded-full cursor-pointer hover:bg-surface-container-highest transition-colors" type="button" onClick={() => setShowSmartFilter((prev) => !prev)}>
-              <span className="material-symbols-outlined text-sm">filter_alt</span>
-              <span className="text-xs font-bold uppercase tracking-widest">Bộ lọc thông minh{smartFilterCount > 0 ? ` (${smartFilterCount})` : ""}</span>
-            </button>
-            <div className="h-6 w-px bg-slate-300 mx-2"></div>
-            {canCreateWorkOrder ? (
-              <button className="bg-primary text-white px-5 py-2 rounded-lg text-xs font-bold flex items-center shadow-lg active:scale-95 transition-transform" type="button" onClick={openCreate}>
-                <span className="material-symbols-outlined text-sm mr-2">add</span>
-                TẠO LỆNH MỚI
+          <section className="mb-8 app-surface-card">
+            <div className="p-3 sm:p-4">
+              <div className="app-toolbar-grid items-stretch">
+              <button className={`${controlBaseClass} flex items-center justify-center gap-2 whitespace-nowrap bg-surface-container-high px-4 rounded-lg cursor-pointer hover:bg-surface-container-highest transition-colors`} type="button" onClick={() => setShowSmartFilter((prev) => !prev)}>
+                <span className="material-symbols-outlined text-sm">filter_alt</span>
+                <span className="truncate">Bộ lọc thông minh{smartFilterCount > 0 ? ` (${smartFilterCount})` : ""}</span>
               </button>
-            ) : (
-              <button className="bg-slate-300 text-slate-600 px-5 py-2 rounded-lg text-xs font-bold flex items-center cursor-not-allowed" type="button" disabled title="Bạn chỉ có quyền xem">
-                <span className="material-symbols-outlined text-sm mr-2">visibility</span>
-                CHỈ XEM
+              <select className={`${controlBaseClass} bg-white border-none rounded-lg shadow-sm focus:ring-1 focus:ring-[#4edea3] py-0 pl-4 pr-8 appearance-none bg-[right_0.7rem_center] bg-no-repeat`} value={assetFilter} onChange={(event) => { setAssetFilter(event.target.value); goPage(1); }}>
+                  <option value="">Tất cả tài sản</option>
+                  {assets.map((asset) => (
+                    <option key={asset._id} value={asset._id}>{asset.name}</option>
+                  ))}
+                </select>
+                <select className={`${controlBaseClass} bg-white border-none rounded-lg shadow-sm focus:ring-1 focus:ring-[#4edea3] py-0 pl-4 pr-8 appearance-none bg-[right_0.7rem_center] bg-no-repeat`} value={statusFilter} onChange={(event) => { setStatusFilter(event.target.value); goPage(1); }}>
+                  <option value="">Tất cả trạng thái</option>
+                  <option value="draft">Bản nháp</option>
+                  <option value="pending_approval">Chờ duyệt</option>
+                  <option value="approved">Đã duyệt</option>
+                  <option value="in_progress">Đang thực hiện</option>
+                  <option value="done">Hoàn thành</option>
+                  <option value="rejected">Từ chối</option>
+                </select>
+              {canCreateWorkOrder ? (
+                <button className={`${controlBaseClass} whitespace-nowrap bg-primary text-white px-5 rounded-lg flex items-center justify-center shadow-lg active:scale-95 transition-transform`} type="button" onClick={openCreate}>
+                  <span className="material-symbols-outlined text-sm mr-2">add</span>
+                  TẠO LỆNH MỚI
+                </button>
+              ) : (
+                <button className={`${controlBaseClass} whitespace-nowrap bg-slate-300 text-slate-600 px-5 rounded-lg flex items-center justify-center cursor-not-allowed`} type="button" disabled title="Bạn chỉ có quyền xem">
+                  <span className="material-symbols-outlined text-sm mr-2">visibility</span>
+                  CHỈ XEM
+                </button>
+              )}
+              <button className={`${controlBaseClass} whitespace-nowrap bg-primary text-white px-5 rounded-lg flex items-center justify-center shadow-lg active:scale-95 transition-transform`} type="button" onClick={exportCsv} title="Xuất CSV" aria-label="Xuất danh sách lệnh công việc CSV">
+                <span className="material-symbols-outlined text-sm mr-2">download</span>
+                XUẤT CSV
               </button>
-            )}
-            <div className="flex gap-2 ml-auto">
-              <select className="bg-white border-none rounded-lg text-xs font-medium shadow-sm focus:ring-1 focus:ring-[#4edea3] py-2 pl-4 pr-8 min-w-[150px] appearance-none bg-[right_0.7rem_center] bg-no-repeat" value={assetFilter} onChange={(event) => { setAssetFilter(event.target.value); goPage(1); }}>
-                <option value="">Tất cả tài sản</option>
-                {assets.map((asset) => (
-                  <option key={asset._id} value={asset._id}>{asset.name}</option>
-                ))}
-              </select>
-              <select className="bg-white border-none rounded-lg text-xs font-medium shadow-sm focus:ring-1 focus:ring-[#4edea3] py-2 pl-4 pr-8 min-w-[180px] appearance-none bg-[right_0.7rem_center] bg-no-repeat" value={statusFilter} onChange={(event) => { setStatusFilter(event.target.value); goPage(1); }}>
-                <option value="">Tất cả trạng thái</option>
-                <option value="draft">Bản nháp</option>
-                <option value="pending_approval">Chờ duyệt</option>
-                <option value="approved">Đã duyệt</option>
-                <option value="in_progress">Đang thực hiện</option>
-                <option value="done">Hoàn thành</option>
-                <option value="rejected">Từ chối</option>
-              </select>
             </div>
-          </section>
+            </div>
 
-          {showSmartFilter ? (
-            <section className="mb-8 rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+            {showSmartFilter ? (
+              <section className="px-3 pb-3 sm:px-4 sm:pb-4">
+                <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                 <select className="bg-surface-container-low border-none rounded-lg py-2 px-3 text-sm outline-none focus:ring-2 focus:ring-[#4edea3]/50" value={smartFilters.priority} onChange={(event) => setSmartFilters((prev) => ({ ...prev, priority: event.target.value }))}>
                   <option value="">Ưu tiên: tất cả</option>
@@ -231,32 +265,34 @@ function WorkOrdersPage() {
                   <input type="checkbox" className="accent-[#4edea3]" checked={smartFilters.actionableOnly} onChange={(event) => setSmartFilters((prev) => ({ ...prev, actionableOnly: event.target.checked }))} />
                   Chỉ hiện có thao tác
                 </label>
-                <button type="button" className="ml-auto px-3 py-1.5 text-xs font-bold rounded-lg hover:bg-slate-100" onClick={() => setSmartFilters({ priority: "", woType: "", triggerSource: "", onlyMine: false, overdueOnly: false, actionableOnly: false })}>
+                <button type="button" className="px-3 py-1.5 text-xs font-bold rounded-lg hover:bg-slate-100" onClick={() => setSmartFilters({ priority: "", woType: "", triggerSource: "", onlyMine: false, overdueOnly: false, actionableOnly: false })}>
                   Xóa lọc thông minh
                 </button>
               </div>
-            </section>
-          ) : null}
+                </div>
+              </section>
+            ) : null}
 
-          <WorkOrdersTable
-            user={user}
-            loading={loading}
-            error={error}
-            pageRows={pageRows}
-            openDetail={openDetail}
-            openEditModal={openEditModal}
-            openSubmitModal={openSubmitModal}
-            openApproveModal={openApproveModal}
-            openRejectModal={openRejectModal}
-            start={start}
-            openCompleteModal={openCompleteModal}
-            signOff={signOff}
-            totalItems={totalItems}
-            safePage={safePage}
-            totalPages={totalPages}
-            pageSize={pageSize}
-            goPage={goPage}
-          />
+            <WorkOrdersTable
+              user={user}
+              loading={loading}
+              error={error}
+              pageRows={pageRows}
+              openDetail={openDetail}
+              openEditModal={openEditModal}
+              openSubmitModal={openSubmitModal}
+              openApproveModal={openApproveModal}
+              openRejectModal={openRejectModal}
+              start={start}
+              openCompleteModal={openCompleteModal}
+              signOff={signOff}
+              totalItems={totalItems}
+              safePage={safePage}
+              totalPages={totalPages}
+              pageSize={pageSize}
+              goPage={goPage}
+            />
+          </section>
 
           <section className="mt-10 grid grid-cols-1 lg:grid-cols-3 gap-8">
             <div className="lg:col-span-2 bg-surface-container-low/40 p-8 rounded-2xl border-2 border-dashed border-slate-200 flex flex-col items-center justify-center text-center">

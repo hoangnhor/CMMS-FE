@@ -8,6 +8,7 @@ import KpiSkeletonCard from "../../components/ui/KpiSkeletonCard";
 
 function AssetsPage() {
   const navigate = useNavigate();
+  const controlBaseClass = "app-toolbar-control";
   const {
     user,
     canManageAssets,
@@ -77,7 +78,7 @@ function AssetsPage() {
           setSearch(value);
           goPage(1);
         }}
-        searchPlaceholder="Tìm kiếm tài sản, mã số hoặc vị trí..."
+        searchPlaceholder="Tìm kiếm tài sản, mã tài sản hoặc vị trí..."
         notifications={notifications}
         notificationsRef={notificationsRef}
         showNotifications={showNotifications}
@@ -99,22 +100,11 @@ function AssetsPage() {
               </button>
             </div>
           ) : null}
-          <div className="flex justify-between items-end mb-8">
+          <div className="mb-8">
             <div>
               <h1 className="app-page-title">Quản lý Tài sản</h1>
               <p className="app-page-subtitle">Theo dõi, kiểm kê và tối ưu hóa hiệu suất thiết bị toàn nhà máy.</p>
             </div>
-            {canManageAssets ? (
-              <button className="bg-primary hover:bg-primary-container text-white px-6 py-2.5 rounded-lg font-bold text-sm flex items-center gap-2 transition-all active:scale-95 shadow-lg shadow-primary/10" type="button" onClick={openCreateModal}>
-                <span className="material-symbols-outlined text-[20px]">add</span>
-                Thêm tài sản
-              </button>
-            ) : (
-              <button className="bg-slate-300 text-slate-600 px-6 py-2.5 rounded-lg font-bold text-sm flex items-center gap-2 cursor-not-allowed" type="button" disabled title="Bạn chỉ có quyền xem">
-                <span className="material-symbols-outlined text-[20px]">visibility</span>
-                Chỉ xem
-              </button>
-            )}
           </div>
 
           {error ? <div className="app-notice app-notice-error mb-6">{error}</div> : null}
@@ -134,31 +124,31 @@ function AssetsPage() {
               </>
             ) : (
               <>
-                <div className="bg-white p-6 rounded-xl border border-slate-200/70 shadow-sm">
-              <div className="text-on-surface-variant text-[10px] font-bold uppercase tracking-widest mb-2">Tổng tài sản</div>
+                <div className="app-kpi-card border-l-4 border-[#111827]">
+              <div className="app-kpi-title">Tổng tài sản</div>
               <div className="flex items-end gap-3">
-                <span className="text-4xl font-bold text-primary tracking-tighter">{totalAssets.toLocaleString("vi-VN")}</span>
+                <span className="app-kpi-value">{totalAssets.toLocaleString("vi-VN")}</span>
                 <span className="text-tertiary-fixed-dim text-xs font-bold mb-1">+0%</span>
               </div>
             </div>
-            <div className="bg-white p-6 rounded-xl border border-slate-200/70 shadow-sm">
-              <div className="text-on-surface-variant text-[10px] font-bold uppercase tracking-widest mb-2">Đang hoạt động</div>
+            <div className="app-kpi-card border-l-4 border-[#4edea3]">
+              <div className="app-kpi-title">Đang hoạt động</div>
               <div className="flex items-end gap-3">
-                <span className="text-4xl font-bold text-primary tracking-tighter">{activeAssets.toLocaleString("vi-VN")}</span>
+                <span className="app-kpi-value">{activeAssets.toLocaleString("vi-VN")}</span>
                 <div className="w-2 h-2 rounded-full bg-tertiary-fixed-dim mb-2.5 shadow-[0_0_8px_rgba(78,222,163,0.6)]"></div>
               </div>
             </div>
-            <div className="bg-white p-6 rounded-xl border border-slate-200/70 shadow-sm">
-              <div className="text-on-surface-variant text-[10px] font-bold uppercase tracking-widest mb-2">Đang bảo trì</div>
+            <div className="app-kpi-card border-l-4 border-[#f59e0b]">
+              <div className="app-kpi-title">Đang bảo trì</div>
               <div className="flex items-end gap-3">
-                <span className="text-4xl font-bold text-primary tracking-tighter">{repairAssets.toLocaleString("vi-VN")}</span>
+                <span className="app-kpi-value">{repairAssets.toLocaleString("vi-VN")}</span>
                 <div className="w-2 h-2 rounded-full bg-amber-400 mb-2.5 shadow-[0_0_8px_rgba(251,191,36,0.6)]"></div>
               </div>
             </div>
-            <div className="bg-white p-6 rounded-xl border border-slate-200/70 shadow-sm">
-              <div className="text-on-surface-variant text-[10px] font-bold uppercase tracking-widest mb-2">Dừng máy</div>
+            <div className="app-kpi-card border-l-4 border-[#b91c1c]">
+              <div className="app-kpi-title">Dừng máy</div>
               <div className="flex items-end gap-3">
-                <span className="text-4xl font-bold text-primary tracking-tighter">{idleAssets.toLocaleString("vi-VN")}</span>
+                <span className="app-kpi-value">{idleAssets.toLocaleString("vi-VN")}</span>
                 <div className="w-2 h-2 rounded-full bg-error mb-2.5 shadow-[0_0_8px_rgba(186,26,26,0.6)]"></div>
               </div>
             </div>
@@ -166,10 +156,19 @@ function AssetsPage() {
             )}
           </div>
 
-          <div className="bg-white rounded-xl p-4 mb-1 flex flex-wrap gap-4 items-center border border-slate-200/70 shadow-sm">
-            <div className="flex items-center gap-2 px-3 py-2 bg-surface-container-lowest rounded-lg text-sm border-none min-w-[200px]">
-              <span className="text-on-surface-variant font-medium">Loại:</span>
-              <select className="bg-transparent border-none focus:ring-0 text-primary font-bold py-0 pr-8 cursor-pointer" value={typeFilter} onChange={(event) => { setTypeFilter(event.target.value); goPage(1); }}>
+          <section className="mb-1 app-surface-card">
+            <div className="p-3 sm:p-4">
+              <div className="app-toolbar-grid items-stretch">
+              <button
+                className={`${controlBaseClass} flex items-center justify-center gap-2 whitespace-nowrap bg-surface-container-high px-4 rounded-lg cursor-pointer hover:bg-surface-container-highest transition-colors`}
+                type="button"
+                onClick={() => setShowAdvancedFilter((prev) => !prev)}
+              >
+                <span className="material-symbols-outlined text-sm">filter_alt</span>
+                <span className="truncate">Bộ lọc thông minh</span>
+              </button>
+            <div className={`${controlBaseClass} bg-white border-none rounded-lg shadow-sm focus-within:ring-1 focus-within:ring-[#4edea3] flex items-center px-3`}>
+              <select className="w-full bg-transparent border-none focus:ring-0 text-primary text-xs font-bold uppercase tracking-widest py-0 pr-8 cursor-pointer" value={typeFilter} onChange={(event) => { setTypeFilter(event.target.value); goPage(1); }}>
                 <option value="">Tất cả loại</option>
                 <option value="machine">Máy móc</option>
                 <option value="mold">Khuôn</option>
@@ -177,9 +176,8 @@ function AssetsPage() {
                 <option value="infrastructure">Hạ tầng</option>
               </select>
             </div>
-            <div className="flex items-center gap-2 px-3 py-2 bg-surface-container-lowest rounded-lg text-sm border-none min-w-[200px]">
-              <span className="text-on-surface-variant font-medium">Trạng thái:</span>
-              <select className="bg-transparent border-none focus:ring-0 text-primary font-bold py-0 pr-8 cursor-pointer" value={statusFilter} onChange={(event) => { setStatusFilter(event.target.value); goPage(1); }}>
+            <div className={`${controlBaseClass} bg-white border-none rounded-lg shadow-sm focus-within:ring-1 focus-within:ring-[#4edea3] flex items-center px-3`}>
+              <select className="w-full bg-transparent border-none focus:ring-0 text-primary text-xs font-bold uppercase tracking-widest py-0 pr-8 cursor-pointer" value={statusFilter} onChange={(event) => { setStatusFilter(event.target.value); goPage(1); }}>
                 <option value="">Tất cả trạng thái</option>
                 <option value="active">Đang hoạt động</option>
                 <option value="in_repair">Bảo trì</option>
@@ -187,26 +185,30 @@ function AssetsPage() {
                 <option value="disposed">Ngưng sử dụng</option>
               </select>
             </div>
+            {canManageAssets ? (
+              <button className={`${controlBaseClass} whitespace-nowrap bg-primary text-white px-5 rounded-lg flex items-center justify-center shadow-lg active:scale-95 transition-transform`} type="button" onClick={openCreateModal}>
+                <span className="material-symbols-outlined text-sm mr-2">add</span>
+                THÊM TÀI SẢN
+              </button>
+            ) : (
+              <button className={`${controlBaseClass} whitespace-nowrap bg-slate-300 text-slate-600 px-5 rounded-lg flex items-center justify-center cursor-not-allowed`} type="button" disabled title="Bạn chỉ có quyền xem">
+                <span className="material-symbols-outlined text-sm mr-2">visibility</span>
+                CHỈ XEM
+              </button>
+            )}
             <button
-              className="flex items-center gap-2 px-4 py-2 hover:bg-surface-container-highest rounded-lg text-sm font-bold text-on-surface-variant transition-colors ml-auto"
-              type="button"
-              onClick={() => setShowAdvancedFilter((prev) => !prev)}
-            >
-              <span className="material-symbols-outlined text-[18px]">filter_list</span>
-              Bộ lọc nâng cao
-            </button>
-            <button
-              className="flex items-center gap-2 px-4 py-2 hover:bg-surface-container-highest rounded-lg text-sm font-bold text-on-surface-variant transition-colors"
+              className={`${controlBaseClass} whitespace-nowrap bg-primary text-white px-5 rounded-lg flex items-center justify-center shadow-lg active:scale-95 transition-transform`}
               type="button"
               onClick={exportCsv}
             >
-              <span className="material-symbols-outlined text-[18px]">download</span>
-              Xuất CSV
+              <span className="material-symbols-outlined text-sm mr-2">download</span>
+              XUẤT CSV
             </button>
-          </div>
+              </div>
+            </div>
 
           {showAdvancedFilter ? (
-            <div className="bg-white rounded-xl mt-3 p-4 border border-slate-200/70 shadow-sm">
+            <div className="px-3 pb-3 sm:px-4 sm:pb-4">
               <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
                 <input
                   className="w-full bg-surface-container-low border-none rounded-lg py-2 px-3 text-sm focus:ring-2 focus:ring-[#4edea3]/50 outline-none"
@@ -276,6 +278,7 @@ function AssetsPage() {
             pageSize={pageSize}
             goPage={goPage}
           />
+          </section>
 
           <div className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="md:col-span-2 bg-primary-container p-8 rounded-2xl relative overflow-hidden flex flex-col justify-center">

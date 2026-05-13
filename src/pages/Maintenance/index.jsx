@@ -38,6 +38,10 @@ function MaintenancePage() {
   const [createLoading, setCreateLoading] = useState(false);
   const [createError, setCreateError] = useState("");
   const [page, setPage] = useState(1);
+  const [showSmartFilter, setShowSmartFilter] = useState(false);
+  const [assetFilter, setAssetFilter] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
+  const [triggerFilter, setTriggerFilter] = useState("");
   const [createForm, setCreateForm] = useState({
     assetId: "",
     triggerType: "days",
@@ -45,6 +49,7 @@ function MaintenancePage() {
     isActive: true,
   });
   const debouncedSearch = useDebouncedValue(search, 300);
+  const controlBaseClass = "app-toolbar-control";
 
   const showNotice = (type, text) => setNotice({ type, text });
 
@@ -124,20 +129,37 @@ function MaintenancePage() {
   const dueByAsset = useMemo(() => buildDueByAsset(workOrders), [workOrders]);
 
   const scheduleRows = useMemo(() => {
-    return filteredSchedules.map((item) => {
+    const rows = filteredSchedules.map((item) => {
       const dueDate = dueByAsset.get(String(item.assetId?._id));
+      const statusData = buildScheduleStatus(item, dueDate);
+      const statusKey =
+        statusData.dayDiff === null
+          ? "unknown"
+          : statusData.dayDiff < 0
+            ? "overdue"
+            : statusData.dayDiff <= 7
+              ? "upcoming"
+              : "scheduled";
 
       return {
         ...item,
         dueDate,
-        ...buildScheduleStatus(item, dueDate),
+        ...statusData,
+        statusKey,
       };
     });
-  }, [filteredSchedules, dueByAsset]);
+    return rows.filter((item) => {
+      if (assetFilter && String(item.assetId?._id) !== assetFilter) return false;
+      if (statusFilter && item.statusKey !== statusFilter) return false;
+      if (triggerFilter && item.triggerType !== triggerFilter) return false;
+      return true;
+    });
+  }, [filteredSchedules, dueByAsset, assetFilter, statusFilter, triggerFilter]);
 
   const totalPages = Math.max(1, Math.ceil(scheduleRows.length / PAGE_SIZE));
   const safePage = Math.min(page, totalPages);
   const pagedRows = scheduleRows.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
+  const smartFilterCount = [triggerFilter].filter(Boolean).length;
 
   const goPage = (value) => {
     const next = Math.max(1, Math.min(totalPages, value));
@@ -236,7 +258,7 @@ function MaintenancePage() {
           setSearch(value);
           setPage(1);
         }}
-        searchPlaceholder="Tìm kiếm tài sản, mã số hoặc vị trí..."
+        searchPlaceholder="Tìm kiếm kế hoạch, tài sản hoặc mã số..."
         notifications={notifications}
         notificationsRef={notificationsRef}
         showNotifications={showNotifications}
@@ -253,32 +275,37 @@ function MaintenancePage() {
           ) : null}
           {error ? <div className="app-notice app-notice-error mb-6">{error}</div> : null}
 
+          <div className="mb-8">
+            <h1 className="app-page-title">Quản lý Bảo trì</h1>
+            <p className="app-page-subtitle">Theo dõi kế hoạch định kỳ, kiểm soát trạng thái và tối ưu lịch vận hành thiết bị.</p>
+          </div>
+
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
-            <div className="bg-surface-container-lowest p-6 rounded-xl relative overflow-hidden group shadow-sm transition-all hover:shadow-md">
+            <div className="app-kpi-card relative overflow-hidden group transition-all hover:shadow-md border-l-4 border-[#4edea3]">
               <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:scale-110 transition-transform"><span className="material-symbols-outlined text-6xl">settings_suggest</span></div>
-              <p className="text-on-surface-variant text-xs font-semibold uppercase tracking-wider mb-2">Kế hoạch đang thực hiện</p>
+              <p className="app-kpi-title">Kế hoạch đang thực hiện</p>
               <div className="flex items-end gap-2">
-                <span className="text-4xl font-extrabold text-primary tracking-tighter">{loading ? "..." : activePlans}</span>
-                <span className="text-[#4edea3] text-sm font-bold mb-1">+{loading ? "0" : Math.max(0, activePlans - overdueCount)}</span>
+                <span className="text-3xl font-bold text-primary">{loading ? "..." : activePlans}</span>
+                <span className="text-[#4edea3] text-[10px] font-bold mb-1">+{loading ? "0" : Math.max(0, activePlans - overdueCount)}</span>
               </div>
               <div className="mt-4 h-1 w-full bg-surface-container rounded-full overflow-hidden"><div className="h-full bg-tertiary-fixed-dim" style={{ width: `${Math.min(100, activePlans * 8)}%` }} /></div>
             </div>
 
-            <div className="bg-surface-container-lowest p-6 rounded-xl relative overflow-hidden group shadow-sm transition-all hover:shadow-md border-l-4 border-amber-400">
+            <div className="app-kpi-card relative overflow-hidden group transition-all hover:shadow-md border-l-4 border-amber-400">
               <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:scale-110 transition-transform"><span className="material-symbols-outlined text-6xl">schedule</span></div>
-              <p className="text-on-surface-variant text-xs font-semibold uppercase tracking-wider mb-2">Sắp đến hạn (7 ngày)</p>
+              <p className="app-kpi-title">Sắp đến hạn (7 ngày)</p>
               <div className="flex items-end gap-2">
-                <span className="text-4xl font-extrabold text-primary tracking-tighter">{loading ? "..." : String(upcoming7Days).padStart(2, "0")}</span>
+                <span className="text-3xl font-bold text-primary">{loading ? "..." : String(upcoming7Days).padStart(2, "0")}</span>
                 <span className="text-amber-500 text-xs font-medium mb-1 italic">Cần kiểm tra</span>
               </div>
               <div className="mt-4 h-1 w-full bg-surface-container rounded-full overflow-hidden"><div className="h-full bg-amber-400" style={{ width: `${Math.min(100, upcoming7Days * 12)}%` }} /></div>
             </div>
 
-            <div className="bg-surface-container-lowest p-6 rounded-xl relative overflow-hidden group shadow-sm transition-all hover:shadow-md border-l-4 border-error">
+            <div className="app-kpi-card relative overflow-hidden group transition-all hover:shadow-md border-l-4 border-error">
               <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:scale-110 transition-transform"><span className="material-symbols-outlined text-6xl text-error">warning</span></div>
-              <p className="text-on-surface-variant text-xs font-semibold uppercase tracking-wider mb-2">Quá hạn bảo trì</p>
+              <p className="app-kpi-title">Quá hạn bảo trì</p>
               <div className="flex items-end gap-2">
-                <span className="text-4xl font-extrabold text-error tracking-tighter">{loading ? "..." : String(overdueCount).padStart(2, "0")}</span>
+                <span className="text-3xl font-bold text-primary">{loading ? "..." : String(overdueCount).padStart(2, "0")}</span>
                 <span className="px-2 py-1 bg-error/10 text-error text-[10px] font-bold rounded mb-1 uppercase">Rủi ro cao</span>
               </div>
               <div className="mt-4 h-1 w-full bg-surface-container rounded-full overflow-hidden"><div className="h-full bg-error" style={{ width: `${Math.min(100, overdueCount * 20)}%` }} /></div>
@@ -286,52 +313,106 @@ function MaintenancePage() {
           </div>
 
           <div className="flex flex-col gap-8">
-            <section className="flex-1 bg-surface-container-lowest rounded-xl shadow-sm overflow-hidden">
-              <div className="px-8 py-6 flex justify-between items-center bg-white border-b border-surface-container">
-                <h2 className="text-xl font-extrabold tracking-tight text-primary">Danh sách kế hoạch bảo trì</h2>
-                <div className="flex items-center gap-2">
+            <section className="flex-1 app-surface-card">
+              <div className="px-8 py-6 flex flex-col items-start gap-3">
+                <div className="app-toolbar-grid items-stretch">
                   <button
-                    className="app-btn-primary disabled:opacity-50 flex items-center gap-2"
+                    className={`${controlBaseClass} flex items-center justify-center gap-2 whitespace-nowrap bg-surface-container-high px-4 rounded-lg cursor-pointer hover:bg-surface-container-highest transition-colors`}
                     type="button"
-                    onClick={() => {
-                      setCreateError("");
-                      setShowCreateModal(true);
-                    }}
-                    disabled={!canManageMaintenance}
+                    onClick={() => setShowSmartFilter((prev) => !prev)}
                   >
-                    <span className="material-symbols-outlined text-[18px]">add</span>
-                    Tạo kế hoạch mới
+                    <span className="material-symbols-outlined text-sm">filter_alt</span>
+                    <span className="truncate">Bộ lọc thông minh{smartFilterCount > 0 ? ` (${smartFilterCount})` : ""}</span>
                   </button>
-                  <button className="p-2 hover:bg-surface-container-low rounded transition-colors" type="button" onClick={() => { setSearch(""); setPage(1); }} title="Xóa bộ lọc tìm kiếm"><span className="material-symbols-outlined text-slate-500">filter_list</span></button>
-                  <button className="p-2 hover:bg-surface-container-low rounded transition-colors" type="button" onClick={exportCsv} title="Xuất CSV" aria-label="Xuất danh sách kế hoạch CSV"><span className="material-symbols-outlined text-slate-500">download</span></button>
+                  <select className={`${controlBaseClass} bg-white border-none rounded-lg shadow-sm focus:ring-1 focus:ring-[#4edea3] py-0 pl-4 pr-8 appearance-none bg-[right_0.7rem_center] bg-no-repeat`} value={assetFilter} onChange={(event) => { setAssetFilter(event.target.value); goPage(1); }}>
+                    <option value="">Tất cả tài sản</option>
+                    {assets.map((asset) => (
+                      <option key={asset._id} value={asset._id}>{asset.name}</option>
+                    ))}
+                  </select>
+                  <select className={`${controlBaseClass} bg-white border-none rounded-lg shadow-sm focus:ring-1 focus:ring-[#4edea3] py-0 pl-4 pr-8 appearance-none bg-[right_0.7rem_center] bg-no-repeat`} value={statusFilter} onChange={(event) => { setStatusFilter(event.target.value); goPage(1); }}>
+                    <option value="">Tất cả trạng thái</option>
+                    <option value="scheduled">Đúng kế hoạch</option>
+                    <option value="upcoming">Sắp đến hạn</option>
+                    <option value="overdue">Quá hạn</option>
+                  </select>
+                  {canManageMaintenance ? (
+                    <button
+                      className={`${controlBaseClass} whitespace-nowrap bg-primary text-white px-5 rounded-lg flex items-center justify-center shadow-lg active:scale-95 transition-transform disabled:opacity-50`}
+                      type="button"
+                      onClick={() => {
+                        setCreateError("");
+                        setShowCreateModal(true);
+                      }}
+                      disabled={!canManageMaintenance}
+                    >
+                      <span className="material-symbols-outlined text-sm mr-2">add</span>
+                      Tạo kế hoạch mới
+                    </button>
+                  ) : (
+                    <button className={`${controlBaseClass} whitespace-nowrap bg-slate-300 text-slate-600 px-5 rounded-lg flex items-center justify-center cursor-not-allowed`} type="button" disabled title="Bạn chỉ có quyền xem">
+                      <span className="material-symbols-outlined text-sm mr-2">visibility</span>
+                      Chỉ xem
+                    </button>
+                  )}
+                  <button
+                    className={`${controlBaseClass} whitespace-nowrap bg-primary text-white px-5 rounded-lg flex items-center justify-center shadow-lg active:scale-95 transition-transform`}
+                    type="button"
+                    onClick={exportCsv}
+                    title="Xuất CSV"
+                    aria-label="Xuất danh sách kế hoạch CSV"
+                  >
+                    <span className="material-symbols-outlined text-sm mr-2">download</span>
+                    Xuất CSV
+                  </button>
                 </div>
               </div>
-              <div className="overflow-x-auto">
-                <table className="w-full min-w-[980px] text-left border-collapse">
+              {showSmartFilter ? (
+                <div className="px-8 pb-4">
+                  <section className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                      <select className="bg-surface-container-low border-none rounded-lg py-2 px-3 text-sm outline-none focus:ring-2 focus:ring-[#4edea3]/50" value={triggerFilter} onChange={(event) => { setTriggerFilter(event.target.value); goPage(1); }}>
+                        <option value="">Loại trigger: tất cả</option>
+                        <option value="days">Theo ngày</option>
+                        <option value="hours">Theo giờ</option>
+                        <option value="shots">Theo shot</option>
+                        <option value="usage_count">Theo số lần dùng</option>
+                      </select>
+                    </div>
+                    <div className="mt-3 flex flex-wrap items-center gap-4">
+                      <button type="button" className="px-3 py-1.5 text-xs font-bold rounded-lg hover:bg-slate-100" onClick={() => { setTriggerFilter(""); setAssetFilter(""); setStatusFilter(""); setSearch(""); setPage(1); }}>
+                        Xóa lọc thông minh
+                      </button>
+                    </div>
+                  </section>
+                </div>
+              ) : null}
+              <div className="app-table-wrap">
+                <table className="app-table min-w-[980px]">
                   <thead>
-                    <tr className="bg-surface-container-low/50">
-                      <th className="sticky top-0 z-10 bg-surface-container-low/50 px-8 py-4 text-[11px] font-bold uppercase tracking-widest text-on-surface-variant">Tài sản & Mã số</th>
-                      <th className="sticky top-0 z-10 bg-surface-container-low/50 px-8 py-4 text-[11px] font-bold uppercase tracking-widest text-on-surface-variant">Loại & Tần suất</th>
-                      <th className="sticky top-0 z-10 bg-surface-container-low/50 px-8 py-4 text-[11px] font-bold uppercase tracking-widest text-on-surface-variant">Ngày dự kiến</th>
-                      <th className="sticky top-0 z-10 bg-surface-container-low/50 px-8 py-4 text-[11px] font-bold uppercase tracking-widest text-on-surface-variant">Trạng thái / Đếm ngược</th>
-                      <th className="sticky top-0 z-10 bg-surface-container-low/50 px-8 py-4 text-[11px] font-bold uppercase tracking-widest text-on-surface-variant">Thao tác</th>
+                    <tr className="app-table-head-row">
+                      <th className="app-table-head-cell px-8">Tài sản & Mã số</th>
+                      <th className="app-table-head-cell px-8">Loại & Tần suất</th>
+                      <th className="app-table-head-cell px-8">Ngày dự kiến</th>
+                      <th className="app-table-head-cell px-8">Trạng thái / Đếm ngược</th>
+                      <th className="app-table-head-cell px-8">Thao tác</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-surface-container">
+                  <tbody className="app-table-body app-table-divider">
                     {pagedRows.map((item) => (
-                      <tr key={item._id} className="hover:bg-surface-container-low transition-colors">
+                      <tr key={item._id} className="app-table-body-row">
                         <td className="px-8 py-6">
                           <div className="flex items-center gap-3">
                             <div className="w-10 h-10 bg-surface-container-high rounded-lg flex items-center justify-center text-primary"><span className="material-symbols-outlined">build</span></div>
-                            <div>
-                              <p className="text-sm font-bold text-primary">{item.assetId?.name || "-"}</p>
-                              <p className="text-[10px] text-slate-400 font-mono">ID: {item.assetId?.assetCode || "-"}</p>
+                            <div className="min-w-0">
+                              <p className="text-sm font-bold text-primary whitespace-nowrap truncate">{item.assetId?.name || "-"}</p>
+                              <p className="text-[10px] text-slate-400 font-mono whitespace-nowrap truncate">ID: {item.assetId?.assetCode || "-"}</p>
                             </div>
                           </div>
                         </td>
                         <td className="px-8 py-6">
-                          <p className="text-xs font-semibold text-primary">Định kỳ</p>
-                          <p className="text-[10px] text-on-surface-variant">{mapIntervalLabel(item.triggerType, item.intervalValue)}</p>
+                          <p className="text-xs font-semibold text-primary whitespace-nowrap truncate">Định kỳ</p>
+                          <p className="text-[10px] text-on-surface-variant whitespace-nowrap truncate">{mapIntervalLabel(item.triggerType, item.intervalValue)}</p>
                         </td>
                         <td className="px-8 py-6"><p className="text-sm font-bold text-primary">{toDisplayDate(item.dueDate)}</p></td>
                         <td className="px-8 py-6">
@@ -352,7 +433,7 @@ function MaintenancePage() {
                   </tbody>
                 </table>
               </div>
-              <div className="px-8 py-4 bg-surface-container-low/30 border-t border-surface-container flex justify-between items-center">
+              <div className="app-table-footer border-t border-surface-container bg-surface-container-low/30">
                 <p className="text-xs text-on-surface-variant italic">Hiển thị {scheduleRows.length === 0 ? 0 : (safePage - 1) * PAGE_SIZE + 1}-{Math.min(scheduleRows.length, safePage * PAGE_SIZE)} trên tổng số {scheduleRows.length} kế hoạch</p>
                 <div className="flex items-center gap-1">
                   <button className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-surface-container-highest text-slate-400 transition-colors disabled:opacity-40" type="button" aria-label="Trang đầu" onClick={() => goPage(1)} disabled={safePage === 1}>

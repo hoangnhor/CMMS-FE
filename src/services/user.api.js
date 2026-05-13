@@ -1,4 +1,4 @@
-import { get, patch, post } from "./http";
+import { del, get, patch, post } from "./http";
 
 export async function listUsersApi(params = {}) {
   return get("/users", { params });
@@ -10,4 +10,8 @@ export async function createUserApi(payload) {
 
 export async function updateUserStatusApi(id, payload) {
   return patch(`/users/${id}/status`, payload);
+}
+
+export async function deleteUserApi(id) {
+  return del(`/users/${id}`);
 }
