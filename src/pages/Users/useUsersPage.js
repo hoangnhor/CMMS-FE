@@ -114,11 +114,11 @@ export function useUsersPage() {
   const createUser = async () => {
     if (!isAdmin) {
       showNotice("error", "Bạn không có quyền tạo người dùng.");
-      return;
+      return false;
     }
     if (!form.name.trim() || !form.email.trim() || !form.password.trim()) {
       setFormError("Vui lòng nhập đầy đủ họ tên, email và mật khẩu.");
-      return;
+      return false;
     }
     try {
       setFormError("");
@@ -132,8 +132,10 @@ export function useUsersPage() {
       setForm(buildCreateUserForm());
       await loadUsers({ silent: true });
       showNotice("success", "Đã tạo người dùng mới.");
+      return true;
     } catch (err) {
       setFormError(err?.response?.data?.message || err?.message || "Tạo người dùng thất bại.");
+      return false;
     } finally {
       setFormLoading(false);
     }

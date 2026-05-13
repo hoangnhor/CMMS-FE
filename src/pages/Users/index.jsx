@@ -248,7 +248,11 @@ function UsersPage() {
             <div className="px-6 py-5 space-y-4">
               <p className="text-xs text-on-surface-variant">Tạo tài khoản mới và cấp quyền truy cập.</p>
               {formError ? <div className="app-notice-compact app-notice-error">{formError}</div> : null}
-              <form className="space-y-4" onSubmit={(e) => { e.preventDefault(); createUser(); }}>
+              <form className="space-y-4" onSubmit={async (e) => {
+                e.preventDefault();
+                const ok = await createUser();
+                if (ok) setShowCreatePanel(false);
+              }}>
                 <div className="space-y-1">
                   <label className="text-[11px] font-bold text-on-surface-variant uppercase tracking-widest pl-1">Họ và tên</label>
                   <input className="app-input" placeholder="VD: Nguyễn Văn A" aria-invalid={!form.name?.trim()} value={form.name} disabled={!isAdmin} onChange={(event) => setForm((prev) => ({ ...prev, name: event.target.value }))} />
