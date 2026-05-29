@@ -7,3 +7,11 @@ export async function loginApi(payload) {
 export async function meApi() {
   return get("/auth/me");
 }
+
+export async function refreshApi() {
+  return post("/auth/refresh", {});
+}
+
+export async function logoutApi() {
+  return post("/auth/logout", {});
+}

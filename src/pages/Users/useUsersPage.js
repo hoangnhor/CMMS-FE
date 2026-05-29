@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuthStore } from "../../store/authStore";
+import { logoutApi } from "../../services/auth.api";
 import { createUserApi, deleteUserApi, listUsersApi, updateUserStatusApi } from "../../services/user.api";
 import { subscribeRealtime } from "../../services/realtime";
 import {
@@ -105,8 +106,13 @@ export function useUsersPage() {
   const roleStats = useMemo(() => buildRoleStats(users), [users]);
   const notifications = useMemo(() => buildUserNotifications(users), [users]);
 
-  const handleLogout = (event) => {
+  const handleLogout = async (event) => {
     event.preventDefault();
+    try {
+      await logoutApi();
+    } catch {
+      // ignore network/API logout errors and clear local session anyway
+    }
     logout();
     navigate("/auth", { replace: true });
   };

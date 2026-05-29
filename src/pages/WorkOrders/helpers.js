@@ -1,5 +1,15 @@
 export const PAGE_SIZE = 8;
 
+function parseObjectIdDate(objectId) {
+  const raw = String(objectId || "");
+  if (!/^[a-fA-F0-9]{24}$/.test(raw)) return null;
+
+  const unixSeconds = Number.parseInt(raw.slice(0, 8), 16);
+  if (Number.isNaN(unixSeconds)) return null;
+
+  return new Date(unixSeconds * 1000);
+}
+
 export function toDisplayDate(value) {
   if (!value) return "-";
   const date = new Date(value);
@@ -57,7 +67,17 @@ export function buildTitle(item) {
   return "Công việc bảo trì";
 }
 
+function capability(item, key) {
+  if (!item || typeof item !== "object") return null;
+  if (!item.capabilities || typeof item.capabilities !== "object") return false;
+  const value = item?.capabilities?.[key];
+  return typeof value === "boolean" ? value : null;
+}
+
 export function canEdit(actor, item) {
+  const serverValue = capability(item, "canEdit");
+  if (typeof serverValue === "boolean") return serverValue;
+
   if (!actor || !item) return false;
   if (!["draft", "rejected"].includes(item.status)) return false;
   if (["admin", "site_manager"].includes(actor.role)) return true;
@@ -65,6 +85,10 @@ export function canEdit(actor, item) {
 }
 
 export function canApprove(actor, item) {
+  const serverValue = capability(item, "canApprove");
+  if (typeof serverValue === "boolean") return serverValue;
+  if (serverValue === false) return false;
+
   if (!actor || !item) return false;
   if (item.priority === "urgent") {
     return ["admin", "site_manager"].includes(actor.role) && ["draft", "pending_approval"].includes(item.status);
@@ -73,6 +97,10 @@ export function canApprove(actor, item) {
 }
 
 export function canStart(actor, item) {
+  const serverValue = capability(item, "canStart");
+  if (typeof serverValue === "boolean") return serverValue;
+  if (serverValue === false) return false;
+
   if (!actor || !item) return false;
   if (actor.role !== "technician" || item.status !== "approved") return false;
   if (!item.assignedTo) return item.priority === "urgent";
@@ -80,12 +108,20 @@ export function canStart(actor, item) {
 }
 
 export function canComplete(actor, item) {
+  const serverValue = capability(item, "canComplete");
+  if (typeof serverValue === "boolean") return serverValue;
+  if (serverValue === false) return false;
+
   if (!actor || !item) return false;
   if (actor.role !== "technician" || item.status !== "in_progress") return false;
   return String(item.assignedTo?._id || item.assignedTo) === String(actor._id);
 }
 
 export function canSignOff(actor, item) {
+  const serverValue = capability(item, "canSignOff");
+  if (typeof serverValue === "boolean") return serverValue;
+  if (serverValue === false) return false;
+
   if (!actor || !item) return false;
   return ["admin", "technician"].includes(actor.role) && item.status === "done";
 }
@@ -205,9 +241,12 @@ export function buildWorkOrderStats(workOrders) {
   const done = workOrders.filter((item) => item.status === "done").length;
   const urgentOpen = workOrders.filter((item) => item.priority === "urgent" && !["done", "rejected"].includes(item.status)).length;
   const doneRate = workOrders.length ? Math.round((done / workOrders.length) * 100) : 0;
+  const todayKey = new Date().toDateString();
+
   const todayNew = workOrders.filter((item) => {
-    const createdLikeDate = new Date(item._id?.toString().slice(0, 8).replace(/(..)(..)(..)(..)/, "$1-$2-$3-$4"));
-    return !Number.isNaN(createdLikeDate.getTime()) && createdLikeDate.toDateString() === new Date().toDateString();
+    const createdAt = item?.createdAt ? new Date(item.createdAt) : parseObjectIdDate(item?._id);
+    if (!createdAt || Number.isNaN(createdAt.getTime())) return false;
+    return createdAt.toDateString() === todayKey;
   }).length;
 
   return { inProgress, pending, doneRate, urgentOpen, todayNew };

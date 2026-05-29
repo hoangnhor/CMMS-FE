@@ -29,7 +29,7 @@ export function useAuth() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const token = useAuthStore((state) => state.token);
+  const user = useAuthStore((state) => state.user);
   const setAuth = useAuthStore((state) => state.setAuth);
   const hydrateStore = useAuthStore((state) => state.hydrate);
 
@@ -41,8 +41,8 @@ export function useAuth() {
     setError("");
   }, []);
 
-  const hydrate = useCallback(() => {
-    hydrateStore();
+  const hydrate = useCallback(async () => {
+    await hydrateStore();
   }, [hydrateStore]);
 
   const submit = useCallback(async (override = null) => {
@@ -59,7 +59,7 @@ export function useAuth() {
         password,
       });
 
-      if (!result?.success || !result?.data?.token) {
+      if (!result?.success || !result?.data?.user) {
         throw new Error(result?.message || "Đăng nhập thất bại");
       }
 
@@ -75,7 +75,7 @@ export function useAuth() {
         localStorage.removeItem(REMEMBER_CREDENTIALS_KEY);
       }
 
-      setAuth({ token: result.data.token, user: result.data.user, remember: rememberValue });
+      setAuth({ user: result.data.user });
       return true;
     } catch (err) {
       const message =
@@ -93,13 +93,13 @@ export function useAuth() {
       remember,
       loading,
       error,
-      isAuthenticated: Boolean(token),
+      isAuthenticated: Boolean(user?._id),
       setField,
       setRemember,
       clearError,
       submit,
       hydrate,
     }),
-    [form, remember, loading, error, token, setField, clearError, submit, hydrate]
+    [form, remember, loading, error, user?._id, setField, clearError, submit, hydrate]
   );
 }

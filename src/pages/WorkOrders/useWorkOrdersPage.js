@@ -1,27 +1,15 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuthStore } from "../../store/authStore";
-import { listAssetsApi } from "../../services/asset.api";
-import { listWorkOrdersApi } from "../../services/workOrder.api";
-import { listUsersApi } from "../../services/user.api";
-import { subscribeRealtime } from "../../services/realtime";
+import { logoutApi } from "../../services/auth.api";
 import {
   PAGE_SIZE,
-  buildApproveModal,
-  buildCompleteModal,
-  buildCreateWorkOrderForm,
-  buildEditWorkOrderModal,
-  buildRejectModal,
-  buildSmartFilters,
-  buildSubmitModal,
-  buildWorkOrderNotifications,
-  buildWorkOrderStats,
   countActiveSmartFilters,
-  filterWorkOrders,
 } from "./helpers";
-import { buildWorkOrderPageActions } from "./actions";
-import { normalizeListResponse } from "../../utils/listResponse";
 import { useDebouncedValue } from "../../hooks/useDebouncedValue";
+import { useWorkOrdersData } from "./useWorkOrdersData";
+import { useWorkOrdersUiState } from "./useWorkOrdersUiState";
+import { useWorkOrdersActions } from "./useWorkOrdersActions";
 
 export function useWorkOrdersPage() {
   const user = useAuthStore((state) => state.user);
@@ -29,108 +17,75 @@ export function useWorkOrdersPage() {
   const navigate = useNavigate();
   const canCreateWorkOrder = ["admin", "site_manager", "technician"].includes(user?.role);
 
-  const [workOrders, setWorkOrders] = useState([]);
-  const [assets, setAssets] = useState([]);
-  const [technicians, setTechnicians] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-  const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState("");
-  const [assetFilter, setAssetFilter] = useState("");
-  const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [totalItems, setTotalItems] = useState(0);
-  const [showSmartFilter, setShowSmartFilter] = useState(false);
-  const [smartFilters, setSmartFilters] = useState(buildSmartFilters);
-  const [showNotifications, setShowNotifications] = useState(false);
-  const [showHelp, setShowHelp] = useState(false);
-  const [actionModal, setActionModal] = useState(null);
-  const [modalLoading, setModalLoading] = useState(false);
-  const [modalError, setModalError] = useState("");
-  const [showCreateModal, setShowCreateModal] = useState(false);
-  const [createError, setCreateError] = useState("");
-  const [createLoading, setCreateLoading] = useState(false);
-  const [submitModal, setSubmitModal] = useState(buildSubmitModal);
-  const [approveModal, setApproveModal] = useState(buildApproveModal);
-  const [rejectModal, setRejectModal] = useState(buildRejectModal);
-  const [completeModal, setCompleteModal] = useState(buildCompleteModal);
-  const [notice, setNotice] = useState({ type: "", text: "" });
-  const [editModal, setEditModal] = useState(buildEditWorkOrderModal);
-  const [createForm, setCreateForm] = useState(buildCreateWorkOrderForm);
-  const notificationsRef = useRef(null);
+  const ui = useWorkOrdersUiState();
+  const {
+    search,
+    setSearch,
+    statusFilter,
+    setStatusFilter,
+    assetFilter,
+    setAssetFilter,
+    page,
+    setPage,
+    showSmartFilter,
+    setShowSmartFilter,
+    smartFilters,
+    setSmartFilters,
+    showNotifications,
+    setShowNotifications,
+    showHelp,
+    setShowHelp,
+    actionModal,
+    setActionModal,
+    modalLoading,
+    setModalLoading,
+    modalError,
+    setModalError,
+    showCreateModal,
+    setShowCreateModal,
+    createError,
+    setCreateError,
+    createLoading,
+    setCreateLoading,
+    submitModal,
+    setSubmitModal,
+    approveModal,
+    setApproveModal,
+    rejectModal,
+    setRejectModal,
+    completeModal,
+    setCompleteModal,
+    notice,
+    setNotice,
+    editModal,
+    setEditModal,
+    createForm,
+    setCreateForm,
+    notificationsRef,
+  } = ui;
   const debouncedSearch = useDebouncedValue(search, 300);
-
-  const loadAssets = useCallback(async () => {
-    try {
-      const res = await listAssetsApi();
-      setAssets(Array.isArray(res?.data) ? res.data : []);
-    } catch {
-      setAssets([]);
-    }
-  }, []);
-
-  const loadTechnicians = useCallback(async () => {
-    if (user?.role !== "admin") {
-      setTechnicians([]);
-      return;
-    }
-    try {
-      const res = await listUsersApi();
-      const rows = Array.isArray(res?.data) ? res.data : [];
-      setTechnicians(rows.filter((item) => item?.role === "technician" && item?.isActive));
-    } catch {
-      setTechnicians([]);
-    }
-  }, [user?.role]);
-
-  const loadWorkOrders = useCallback(async ({ silent = false } = {}) => {
-    try {
-      if (!silent) setLoading(true);
-      setError("");
-      const params = {};
-      if (statusFilter) params.status = statusFilter;
-      if (assetFilter) params.assetId = assetFilter;
-      if (debouncedSearch.trim()) params.keyword = debouncedSearch.trim();
-      params.paginated = true;
-      params.page = page;
-      params.limit = PAGE_SIZE;
-      const res = await listWorkOrdersApi(params);
-      const { items, pagination } = normalizeListResponse(res);
-      setWorkOrders(items);
-      if (pagination) {
-        setTotalPages(pagination.totalPages || 1);
-        setTotalItems(pagination.total || 0);
-      } else {
-        setTotalPages(1);
-        setTotalItems(items.length);
-      }
-    } catch (err) {
-      setError(err?.response?.data?.message || err?.message || "Không tải được lệnh công việc");
-      setWorkOrders([]);
-      setTotalPages(1);
-      setTotalItems(0);
-    } finally {
-      if (!silent) setLoading(false);
-    }
-  }, [statusFilter, assetFilter, debouncedSearch, page]);
-
-  useEffect(() => {
-    Promise.resolve().then(() => {
-      loadAssets();
-    });
-  }, [loadAssets]);
-
-  useEffect(() => {
-    Promise.resolve().then(() => {
-      loadTechnicians();
-    });
-  }, [loadTechnicians]);
-
-  useEffect(() => {
-    Promise.resolve().then(() => {
-      loadWorkOrders();
-    });
-  }, [loadWorkOrders]);
+  const {
+    workOrders,
+    assets,
+    technicians,
+    loading,
+    error,
+    filteredRows,
+    pageRows,
+    totalPages,
+    totalItems,
+    safePage,
+    stats,
+    notifications,
+    loadWorkOrders,
+  } = useWorkOrdersData({
+    user,
+    debouncedSearch,
+    statusFilter,
+    assetFilter,
+    page,
+    smartFilters,
+  });
 
   useEffect(() => {
     const onClickOutside = (event) => {
@@ -140,34 +95,11 @@ export function useWorkOrdersPage() {
     };
     document.addEventListener("mousedown", onClickOutside);
     return () => document.removeEventListener("mousedown", onClickOutside);
-  }, [showNotifications]);
+  }, [showNotifications, notificationsRef, setShowNotifications]);
 
-  useEffect(() => {
-    let timeoutId = null;
-    const onChanged = () => {
-      if (timeoutId) return;
-      timeoutId = setTimeout(() => {
-        timeoutId = null;
-        loadWorkOrders({ silent: true });
-      }, 250);
-    };
-    const unsub = subscribeRealtime(["work_order.changed"], onChanged);
-    return () => {
-      unsub();
-      if (timeoutId) clearTimeout(timeoutId);
-    };
-  }, [loadWorkOrders]);
-
-  const filteredRows = useMemo(() => filterWorkOrders(workOrders, { search: debouncedSearch, smartFilters, user }), [debouncedSearch, workOrders, smartFilters, user]);
   const smartFilterCount = useMemo(() => countActiveSmartFilters(smartFilters), [smartFilters]);
-  const hasClientOnlyFilters = smartFilterCount > 0;
-
-  const effectiveTotalPages = hasClientOnlyFilters ? 1 : totalPages;
-  const effectiveTotalItems = hasClientOnlyFilters ? filteredRows.length : totalItems;
-  const safePage = Math.min(page, effectiveTotalPages);
-  const pageRows = filteredRows;
   const goPage = (value) => {
-    const next = Math.max(1, Math.min(effectiveTotalPages, value));
+    const next = Math.max(1, Math.min(totalPages, value));
     setPage(next);
   };
 
@@ -175,13 +107,15 @@ export function useWorkOrdersPage() {
     if (!notice.text) return undefined;
     const timer = setTimeout(() => setNotice({ type: "", text: "" }), 3500);
     return () => clearTimeout(timer);
-  }, [notice.text]);
+  }, [notice.text, setNotice]);
 
-  const stats = useMemo(() => buildWorkOrderStats(workOrders), [workOrders]);
-  const notifications = useMemo(() => buildWorkOrderNotifications(stats), [stats]);
-
-  const handleLogout = (event) => {
+  const handleLogout = async (event) => {
     event.preventDefault();
+    try {
+      await logoutApi();
+    } catch {
+      // ignore network/API logout errors and clear local session anyway
+    }
     logout();
     navigate("/auth", { replace: true });
   };
@@ -208,7 +142,7 @@ export function useWorkOrdersPage() {
     closeActionModal,
     openCreate,
     createWorkOrder,
-  } = buildWorkOrderPageActions({
+  } = useWorkOrdersActions({
     user,
     canCreateWorkOrder,
     assets,
@@ -292,10 +226,10 @@ export function useWorkOrdersPage() {
     setCreateForm,
     notificationsRef,
     filteredRows,
-    totalItems: effectiveTotalItems,
+    totalItems,
     pageSize: PAGE_SIZE,
     safePage,
-    totalPages: effectiveTotalPages,
+    totalPages,
     pageRows,
     goPage,
     stats,

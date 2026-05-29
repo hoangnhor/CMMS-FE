@@ -8,9 +8,13 @@ import tailwindcss from "@tailwindcss/vite";
 export default defineConfig(({ mode }) => {
   const configDir = dirname(fileURLToPath(import.meta.url));
   const env = loadEnv(mode, configDir, "VITE_");
+  const hasApiBase = Boolean(env.VITE_API_BASE_URL?.trim());
+  const useSameOriginApi = String(env.VITE_USE_SAME_ORIGIN_API || "").toLowerCase() === "true";
 
-  if (mode !== "development" && !env.VITE_API_BASE_URL?.trim()) {
-    throw new Error("VITE_API_BASE_URL is required for non-development builds");
+  if (mode !== "development" && !hasApiBase && !useSameOriginApi) {
+    throw new Error(
+      "Thiếu cấu hình API production: set VITE_API_BASE_URL hoặc VITE_USE_SAME_ORIGIN_API=true"
+    );
   }
 
   return {

@@ -1,7 +1,9 @@
 import { expect, test } from "@playwright/test";
+import { env } from "node:process";
 
 const ADMIN_EMAIL = "admin@factory.local";
 const ADMIN_PASSWORD = "password123";
+const API_BASE_URL = env.E2E_API_BASE_URL || "http://localhost:5000/api";
 
 async function loginAsAdmin(page) {
   await page.goto("/auth");
@@ -14,20 +16,18 @@ async function loginAsAdmin(page) {
 }
 
 async function loginApi(request) {
-  const response = await request.post("http://localhost:5000/api/auth/login", {
+  const response = await request.post(`${API_BASE_URL}/auth/login`, {
     data: {
       email: ADMIN_EMAIL,
       password: ADMIN_PASSWORD,
     },
   });
   expect(response.ok()).toBeTruthy();
-  const payload = await response.json();
-  return payload.data.token;
+  return request;
 }
 
-async function createAssetApi(request, token, { assetCode, assetName }) {
-  const response = await request.post("http://localhost:5000/api/assets", {
-    headers: { Authorization: `Bearer ${token}` },
+async function createAssetApi(request, { assetCode, assetName }) {
+  const response = await request.post(`${API_BASE_URL}/assets`, {
     data: {
       assetCode,
       name: assetName,
@@ -55,23 +55,18 @@ async function createAssetApi(request, token, { assetCode, assetName }) {
   return payload.data.asset;
 }
 
-async function deleteAssetApi(request, token, assetId) {
+async function deleteAssetApi(request, assetId) {
   if (!assetId) return;
-  await request.delete(`http://localhost:5000/api/assets/${assetId}`, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
+  await request.delete(`${API_BASE_URL}/assets/${assetId}`);
 }
 
-async function deactivateUserByEmail(request, token, email) {
-  const response = await request.get("http://localhost:5000/api/users", {
-    headers: { Authorization: `Bearer ${token}` },
-  });
+async function deactivateUserByEmail(request, email) {
+  const response = await request.get(`${API_BASE_URL}/users`);
   expect(response.ok()).toBeTruthy();
   const payload = await response.json();
   const user = payload.data.find((item) => item.email === email);
   if (!user) return null;
-  await request.patch(`http://localhost:5000/api/users/${user._id}/status`, {
-    headers: { Authorization: `Bearer ${token}` },
+  await request.patch(`${API_BASE_URL}/users/${user._id}/status`, {
     data: { isActive: false },
   });
   return user._id;
@@ -97,7 +92,7 @@ test("browser smoke test can create asset from assets page", async ({ page, requ
   const stamp = Date.now();
   const assetCode = `SMK-UI-${stamp}`;
   const assetName = `Smoke Asset ${stamp}`;
-  const token = await loginApi(request);
+  await loginApi(request);
   let createdAssetId = null;
 
   try {
@@ -119,22 +114,20 @@ test("browser smoke test can create asset from assets page", async ({ page, requ
     await expect(page.getByText("Tạo tài sản thành công.")).toBeVisible();
     await expect(page.getByRole("cell", { name: assetCode, exact: true })).toBeVisible();
 
-    const lookup = await request.get("http://localhost:5000/api/assets", {
-      headers: { Authorization: `Bearer ${token}` },
-    });
+    const lookup = await request.get(`${API_BASE_URL}/assets`);
     const lookupJson = await lookup.json();
     const createdAsset = lookupJson.data.find((item) => item.assetCode === assetCode);
     expect(createdAsset).toBeTruthy();
     createdAssetId = createdAsset._id;
   } finally {
-    await deleteAssetApi(request, token, createdAssetId);
+    await deleteAssetApi(request, createdAssetId);
   }
 });
 
 test("browser smoke test can create work order from work orders page", async ({ page, request }) => {
   const stamp = Date.now();
-  const token = await loginApi(request);
-  const asset = await createAssetApi(request, token, {
+  await loginApi(request);
+  const asset = await createAssetApi(request, {
     assetCode: `SMK-WO-${stamp}`,
     assetName: `Smoke WO Asset ${stamp}`,
   });
@@ -154,24 +147,22 @@ test("browser smoke test can create work order from work orders page", async ({ 
     await modal.getByRole("button", { name: /^Tạo lệnh$/i }).click();
     await expect(modal).toBeHidden();
 
-    const response = await request.get("http://localhost:5000/api/work-orders", {
-      headers: { Authorization: `Bearer ${token}` },
-    });
+    const response = await request.get(`${API_BASE_URL}/work-orders`);
     const payload = await response.json();
     const createdWorkOrder = payload.data.find(
       (item) => item.assetId?._id === asset._id && item.status === "draft"
     );
     expect(createdWorkOrder).toBeTruthy();
   } finally {
-    await deleteAssetApi(request, token, asset._id);
+    await deleteAssetApi(request, asset._id);
   }
 });
 
 test("browser smoke test can create PM schedule from maintenance page", async ({ page, request }) => {
   test.setTimeout(60000);
   const stamp = Date.now();
-  const token = await loginApi(request);
-  const asset = await createAssetApi(request, token, {
+  await loginApi(request);
+  const asset = await createAssetApi(request, {
     assetCode: `SMK-PM-${stamp}`,
     assetName: `Smoke PM Asset ${stamp}`,
   });
@@ -193,8 +184,7 @@ test("browser smoke test can create PM schedule from maintenance page", async ({
 
     await expect.poll(
       async () => {
-        const response = await request.get("http://localhost:5000/api/pm-schedules", {
-          headers: { Authorization: `Bearer ${token}` },
+        const response = await request.get(`${API_BASE_URL}/pm-schedules`, {
         });
         const payload = await response.json();
         return payload.data.some(
@@ -207,13 +197,13 @@ test("browser smoke test can create PM schedule from maintenance page", async ({
       }
     ).toBe(true);
   } finally {
-    await deleteAssetApi(request, token, asset._id);
+    await deleteAssetApi(request, asset._id);
   }
 });
 
 test("browser smoke test can create user from users page", async ({ page, request }) => {
   const stamp = Date.now();
-  const token = await loginApi(request);
+  await loginApi(request);
   const userEmail = `smoke.${stamp}@factory.local`;
   const userName = `Smoke User ${stamp}`;
 
@@ -231,13 +221,95 @@ test("browser smoke test can create user from users page", async ({ page, reques
 
     await expect(page.getByText("Đã tạo người dùng mới.")).toBeVisible();
 
-    const response = await request.get("http://localhost:5000/api/users", {
-      headers: { Authorization: `Bearer ${token}` },
-    });
+    const response = await request.get(`${API_BASE_URL}/users`);
     const payload = await response.json();
     const createdUser = payload.data.find((item) => item.email === userEmail);
     expect(createdUser).toBeTruthy();
   } finally {
-    await deactivateUserByEmail(request, token, userEmail);
+    await deactivateUserByEmail(request, userEmail);
+  }
+});
+
+test("api lifecycle test for work order full flow and maintenance log consistency", async ({ request }) => {
+  const stamp = Date.now();
+  const adminEmail = "admin@factory.local";
+  const adminPassword = "password123";
+  const techEmail = "tech1@factory.local";
+  const techPassword = "password123";
+
+  await request.post(`${API_BASE_URL}/auth/login`, {
+    data: { email: adminEmail, password: adminPassword },
+  });
+
+  const usersResponse = await request.get(`${API_BASE_URL}/users`);
+  expect(usersResponse.ok()).toBeTruthy();
+  const usersPayload = await usersResponse.json();
+  const technician = usersPayload.data.find((item) => item.email === techEmail && item.isActive);
+  expect(technician).toBeTruthy();
+
+  const asset = await createAssetApi(request, {
+    assetCode: `SMK-LC-${stamp}`,
+    assetName: `Smoke Lifecycle Asset ${stamp}`,
+  });
+
+  let createdWorkOrderId = null;
+  try {
+    const createWoRes = await request.post(`${API_BASE_URL}/work-orders`, {
+      data: {
+        woType: "CM",
+        triggerSource: "production_request",
+        priority: "medium",
+        assetId: asset._id,
+      },
+    });
+    expect(createWoRes.ok()).toBeTruthy();
+    const createWoPayload = await createWoRes.json();
+    createdWorkOrderId = createWoPayload.data._id;
+
+    const submitRes = await request.put(`${API_BASE_URL}/work-orders/${createdWorkOrderId}/submit`);
+    expect(submitRes.ok()).toBeTruthy();
+
+    const approveRes = await request.put(`${API_BASE_URL}/work-orders/${createdWorkOrderId}/approve`, {
+      data: { assignedTo: technician._id },
+    });
+    expect(approveRes.ok()).toBeTruthy();
+
+    await request.post(`${API_BASE_URL}/auth/login`, {
+      data: { email: techEmail, password: techPassword },
+    });
+    const startRes = await request.put(`${API_BASE_URL}/work-orders/${createdWorkOrderId}/start`);
+    expect(startRes.ok()).toBeTruthy();
+
+    const completeRes = await request.put(`${API_BASE_URL}/work-orders/${createdWorkOrderId}/complete`, {
+      data: {
+        laborHours: 2.5,
+        findings: "Lifecycle smoke test completed.",
+        shotAtMaintenance: 120,
+        spareParts: [{ partName: "Bearing", qty: 2, unitCost: 150000 }],
+      },
+    });
+    expect(completeRes.ok()).toBeTruthy();
+
+    const signoffRes = await request.put(`${API_BASE_URL}/work-orders/${createdWorkOrderId}/sign-off`, {
+      data: { qcSignOff: true },
+    });
+    expect(signoffRes.ok()).toBeTruthy();
+
+    await request.post(`${API_BASE_URL}/auth/login`, {
+      data: { email: adminEmail, password: adminPassword },
+    });
+
+    const woDetailRes = await request.get(`${API_BASE_URL}/work-orders/${createdWorkOrderId}`);
+    expect(woDetailRes.ok()).toBeTruthy();
+    const woDetailPayload = await woDetailRes.json();
+    expect(woDetailPayload.data.status).toBe("done");
+    expect(woDetailPayload.data.qcSignOff).toBe(true);
+    expect(woDetailPayload.data.maintenanceLog).toBeTruthy();
+    expect(woDetailPayload.data.sparePartsUsed.length).toBe(1);
+  } finally {
+    await request.post(`${API_BASE_URL}/auth/login`, {
+      data: { email: adminEmail, password: adminPassword },
+    });
+    await deleteAssetApi(request, asset._id);
   }
 });

@@ -2,6 +2,7 @@
 import { useNavigate } from "react-router-dom";
 import AppShell from "../../components/layout/AppShell";
 import { useAuthStore } from "../../store/authStore";
+import { logoutApi } from "../../services/auth.api";
 import { listAssetsApi } from "../../services/asset.api";
 import { listWorkOrdersApi } from "../../services/workOrder.api";
 import { createPmScheduleApi, listPmSchedulesApi } from "../../services/maintenance.api";
@@ -236,8 +237,13 @@ function MaintenancePage() {
     window.URL.revokeObjectURL(url);
   };
 
-  const handleLogout = (event) => {
+  const handleLogout = async (event) => {
     event.preventDefault();
+    try {
+      await logoutApi();
+    } catch {
+      // ignore network/API logout errors and clear local session anyway
+    }
     logout();
     navigate("/auth", { replace: true });
   };

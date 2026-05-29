@@ -3,7 +3,6 @@ import { Navigate, useLocation } from "react-router-dom";
 import { useAuthStore } from "../../store/authStore";
 
 function PrivateRoute({ children, allowedRoles = null }) {
-  const token = useAuthStore((state) => state.token);
   const user = useAuthStore((state) => state.user);
   const hydrated = useAuthStore((state) => state.hydrated);
   const hydrate = useAuthStore((state) => state.hydrate);
@@ -19,7 +18,7 @@ function PrivateRoute({ children, allowedRoles = null }) {
     return <div className="app-loading">Đang tải...</div>;
   }
 
-  if (!token) {
+  if (!user?._id) {
     return <Navigate to="/auth" replace state={{ from: location }} />;
   }
 

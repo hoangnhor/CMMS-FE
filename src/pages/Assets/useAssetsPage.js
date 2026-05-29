@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuthStore } from "../../store/authStore";
 import { listAssetsApi } from "../../services/asset.api";
+import { logoutApi } from "../../services/auth.api";
 import { subscribeRealtime } from "../../services/realtime";
 import {
   PAGE_SIZE,
@@ -52,7 +53,6 @@ export function useAssetsPage() {
   const [advancedFilters, setAdvancedFilters] = useState(buildAdvancedFilters);
   const notificationsRef = useRef(null);
   const debouncedSearch = useDebouncedValue(search, 300);
-
   const loadAssets = useCallback(async ({ silent = false } = {}) => {
     try {
       if (!silent) setLoading(true);
@@ -65,6 +65,10 @@ export function useAssetsPage() {
         assetType: typeFilter || undefined,
         status: statusFilter || undefined,
         keyword: keyword || undefined,
+        manufacturer: advancedFilters.manufacturer.trim() || undefined,
+        location: advancedFilters.location.trim() || undefined,
+        minPrice: advancedFilters.minPrice.trim() || undefined,
+        maxPrice: advancedFilters.maxPrice.trim() || undefined,
       });
       const { items, pagination } = normalizeListResponse(res);
       setAssets(items);
@@ -77,14 +81,6 @@ export function useAssetsPage() {
           in_repair: Number(summaryData.in_repair) || 0,
           idle: Number(summaryData.idle) || 0,
         });
-      } else {
-        setTotalPages(1);
-        setTotalItems(items.length);
-        setSummary({
-          active: items.filter((item) => item.status === "active").length,
-          in_repair: items.filter((item) => item.status === "in_repair").length,
-          idle: items.filter((item) => item.status === "idle").length,
-        });
       }
     } catch (err) {
       setError(err?.response?.data?.message || err?.message || "Không tải được dữ liệu tài sản");
@@ -95,7 +91,7 @@ export function useAssetsPage() {
     } finally {
       if (!silent) setLoading(false);
     }
-  }, [page, debouncedSearch, typeFilter, statusFilter]);
+  }, [page, debouncedSearch, typeFilter, statusFilter, advancedFilters]);
 
   useEffect(() => {
     Promise.resolve().then(() => {
@@ -104,13 +100,15 @@ export function useAssetsPage() {
   }, [loadAssets]);
 
   const filteredAssets = useMemo(() => {
-    return filterAssets(assets, { search: "", typeFilter: "", statusFilter: "", advancedFilters });
-  }, [assets, advancedFilters]);
+    return filterAssets(assets, { search: "", typeFilter: "", statusFilter: "", advancedFilters: buildAdvancedFilters() });
+  }, [assets]);
 
-  const safePage = Math.min(page, totalPages);
+  const effectiveTotalItems = totalItems;
+  const effectiveTotalPages = totalPages;
+  const safePage = Math.min(page, effectiveTotalPages);
   const pagedAssets = filteredAssets;
 
-  const totalAssets = totalItems;
+  const totalAssets = effectiveTotalItems;
   const activeAssets = summary.active;
   const repairAssets = summary.in_repair;
   const idleAssets = summary.idle;
@@ -119,14 +117,19 @@ export function useAssetsPage() {
     return buildAssetNotifications({ activeAssets, repairAssets, idleAssets }).map(mapNotificationTone);
   }, [activeAssets, repairAssets, idleAssets]);
 
-  const handleLogout = (event) => {
+  const handleLogout = async (event) => {
     event.preventDefault();
+    try {
+      await logoutApi();
+    } catch {
+      // ignore network/API logout errors and clear local session anyway
+    }
     logout();
     navigate("/auth", { replace: true });
   };
 
   const goPage = (value) => {
-    const next = Math.max(1, Math.min(totalPages, value));
+    const next = Math.max(1, Math.min(effectiveTotalPages, value));
     setPage(next);
   };
 
@@ -263,10 +266,10 @@ export function useAssetsPage() {
     notificationsRef,
     notifications,
     filteredAssets,
-    totalItems,
+    totalItems: effectiveTotalItems,
     pageSize: PAGE_SIZE,
     safePage,
-    totalPages,
+    totalPages: effectiveTotalPages,
     pagedAssets,
     totalAssets,
     activeAssets,

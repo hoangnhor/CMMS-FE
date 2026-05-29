@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import AppShell from "../../components/layout/AppShell";
 import { useAuthStore } from "../../store/authStore";
 import { useDashboard } from "../../hooks/useDashboard";
+import { logoutApi } from "../../services/auth.api";
 import { buildChartHeights, buildDashboardNotifications, buildWorkOrderSearchText, formatNowTime, mapNotificationTone, mapPriority, mapStatus } from "./helpers";
 import "./style.css";
 import TableStateRow from "../../components/ui/TableStateRow";
@@ -32,8 +33,13 @@ function DashboardPage() {
       .slice(0, 20);
   }, [searchTerm, allWorkOrders, recentWorkOrders]);
 
-  const handleLogout = (event) => {
+  const handleLogout = async (event) => {
     event.preventDefault();
+    try {
+      await logoutApi();
+    } catch {
+      // ignore network/API logout errors and clear local session anyway
+    }
     logout();
     navigate("/auth", { replace: true });
   };

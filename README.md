@@ -1,99 +1,90 @@
-# Asset Management Frontend (CMMS)
+# CMMS Frontend (Asset Management)
 
-![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=white)
-![Vite](https://img.shields.io/badge/Vite-8-646CFF?logo=vite&logoColor=white)
-![TailwindCSS](https://img.shields.io/badge/TailwindCSS-4-06B6D4?logo=tailwindcss&logoColor=white)
-![Zustand](https://img.shields.io/badge/State-Zustand-18181B)
-![Socket.IO Client](https://img.shields.io/badge/Socket.IO-Client-010101?logo=socketdotio&logoColor=white)
+Frontend cho hệ thống CMMS. Tập trung vào workflow theo role, realtime dashboard và auth cookie-based.
 
-> Product-scale frontend cho CMMS: đồng bộ realtime, trải nghiệm dữ liệu lớn ổn định và luồng thao tác theo role.
+- Demo: `https://htcmms.vercel.app/auth`
+- FE Repo: `https://github.com/hoangnhor/CMMS-FE`
+- BE Repo: `https://github.com/hoangnhor/CMMS-BE`
 
-- Live Demo: `https://htcmms.vercel.app/auth`
-- Related Repositories: `https://github.com/hoangnhor/CMMS-FE` | `https://github.com/hoangnhor/CMMS-BE`
+## Tech Stack (Core)
 
-## 🔥 Technical Highlights
+- React.js
+- Tailwind CSS
+- Node.js ecosystem (Vite)
+- Socket.IO Client
+- JWT cookie-based session
 
-1. Role-based UI boundary với route guard và action-level restrictions.
-2. Realtime synchronization qua Socket.IO events + debounced refresh.
-3. Unified table states (loading/empty/error), responsive table UX.
-4. Resilient auth session với Zustand hydrate + auto logout khi API trả 401.
+## Features
 
-## 📦 State & Data Flow
+- Đăng nhập/đăng xuất với access + refresh cookie (`withCredentials`)
+- Route guard theo role
+- Dashboard realtime qua Socket.IO
+- Quản lý Asset / Work Order / Preventive Maintenance / User
+- Session refresh tự động khi gặp 401 (retry 1 lần trước khi logout)
+- CSRF header tự động cho các request thay đổi dữ liệu
 
-| Layer | Vai trò |
-|---|---|
-| `store/authStore` | auth state + session hydrate |
-| `services/http` | API wrapper thống nhất response/error |
-| `services/realtime` | socket connect/auth/subscribe |
-| `hooks/*` | orchestration dữ liệu theo màn hình |
-| `pages/*` | business UI flows |
-
-## 🔄 Core Flow
-
-```text
-Login -> JWT -> Auth Store -> Protected Routes
-Realtime Event -> Debounced Reload -> UI Sync
-List Query (paginated, keyword) -> Items + Pagination -> Table States
-```
-
-## 🚀 Local Setup
+## Local Setup
 
 ```bash
 npm install
 npm run dev
 ```
 
-### `.env`
+## Environment
+
+Tạo file `.env`:
 
 ```env
 VITE_API_BASE_URL=http://localhost:5000/api
+VITE_DEMO_PASSWORD=password123
 ```
 
-## 🔌 API Usage Notes
+Ghi chú:
+- `VITE_DEMO_PASSWORD` dùng cho nút đăng nhập nhanh ở trang `/auth`.
+- Không commit `.env`.
 
-- FE gọi trực tiếp `VITE_API_BASE_URL`.
-- JWT được gắn qua `Authorization: Bearer <token>` trong service layer.
-- Nếu backend trả `success=false` hoặc `401`, HTTP layer sẽ normalize lỗi để UI xử lý thống nhất.
+## Scripts
 
-## 🧪 Demo Account Notes
+```bash
+npm run dev
+npm run lint
+npm run build
+npm run test:e2e
+npm run test:e2e:local
+npm run check:auth-contract
+```
 
-- Dùng tài khoản được seed từ backend (`npm run seed` phía backend).
-- Không hardcode tài khoản demo trong frontend.
+## Auth & Security Notes
 
-## 🛡️ Frontend Security Checklist
+- FE không lưu JWT trong localStorage/sessionStorage.
+- Token nằm trong httpOnly cookie do backend set.
+- FE gửi CSRF token qua header `x-csrf-token` cho method `POST/PUT/PATCH/DELETE`.
+- Khi API trả 401:
+  - Nếu là endpoint thường: thử `/auth/refresh` rồi retry request.
+  - Nếu refresh fail: logout.
 
-- [ ] `VITE_API_BASE_URL` trỏ đúng HTTPS backend production.
-- [ ] Không commit `.env`.
-- [ ] Không lưu secret ở frontend env.
-- [ ] Verify CORS backend chỉ whitelist frontend domain production.
-- [ ] Kiểm tra auto logout khi token hết hạn/không hợp lệ.
+## E2E Test Notes
 
-## 🚢 Deployment Notes (Vercel)
+- File test chính: `tests/smoke.spec.js`
+- Có thể override API base cho E2E:
 
-1. Set `VITE_API_BASE_URL` trong Vercel Project Settings.
-2. Build command: `npm run build`
-3. Output directory: `dist`
-4. Verify sau deploy:
-   - Login được
-   - Dashboard load dữ liệu
-   - Các trang Assets/WO/Maintenance/Users render đúng loading/empty/error state
+```bash
+E2E_API_BASE_URL=http://localhost:5000/api npm run test:e2e
+```
 
-## ✅ Final Release Checklist
+## Build & Deploy
 
-1. `npm run lint` pass.
-2. `npm run build` pass.
-3. FE kết nối đúng BE domain production.
-4. Kiểm tra responsive desktop + mobile các trang chính.
-5. Smoke test các flow: login, CRUD cơ bản, realtime refresh.
+- Build: `npm run build`
+- Output: `dist`
+- Deploy: Vercel (khuyến nghị)
+- Cần set env production tương ứng:
+  - `VITE_API_BASE_URL` hoặc `VITE_USE_SAME_ORIGIN_API=true` (nếu dùng reverse proxy `/api`)
 
-## 📂 Source Structure
+## Project Structure
 
 ```text
 src/
-├─ assets/
 ├─ components/
-│  ├─ layout/
-│  └─ ui/
 ├─ hooks/
 ├─ pages/
 ├─ services/

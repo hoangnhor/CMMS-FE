@@ -11,31 +11,28 @@ const QUICK_ACCOUNTS = [
     label: "Admin",
     role: "Toàn quyền",
     email: "admin@factory.local",
-    password: "password123",
     icon: "shield_person",
   },
   {
     label: "Manager",
     role: "Site Manager",
     email: "manager@factory.local",
-    password: "password123",
     icon: "factory",
   },
   {
     label: "Technician",
     role: "Technician",
     email: "tech1@factory.local",
-    password: "password123",
     icon: "build_circle",
   },
   {
     label: "Accountant",
     role: "Accountant",
     email: "accountant@factory.local",
-    password: "password123",
     icon: "account_balance_wallet",
   },
 ];
+const DEMO_PASSWORD = String(import.meta.env.VITE_DEMO_PASSWORD || "").trim();
 
 function SignInPage() {
   const [showPassword, setShowPassword] = useState(false);
@@ -75,12 +72,18 @@ function SignInPage() {
   const quickLogin = async (account) => {
     clearError();
     setSupportNotice("");
+    if (!DEMO_PASSWORD) {
+      setSupportNotice("Thiếu VITE_DEMO_PASSWORD. Vui lòng nhập mật khẩu thủ công.");
+      setField("email", account.email);
+      setRemember(true);
+      return;
+    }
     setField("email", account.email);
-    setField("password", account.password);
+    setField("password", DEMO_PASSWORD);
     setRemember(true);
     await submit({
       email: account.email,
-      password: account.password,
+      password: DEMO_PASSWORD,
       remember: true,
     });
   };
@@ -196,7 +199,6 @@ function SignInPage() {
                             {account.role}
                           </span>
                         </div>
-                        <p className="mt-0.5 truncate whitespace-nowrap text-[10px] text-on-surface leading-snug">{account.name}</p>
                         <p className="truncate whitespace-nowrap text-[9px] text-on-surface-variant">{account.email}</p>
                       </div>
                     </div>

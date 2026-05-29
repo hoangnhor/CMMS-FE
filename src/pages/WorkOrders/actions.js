@@ -1,14 +1,16 @@
 import {
-  approveWorkOrderApi,
-  completeWorkOrderApi,
-  createWorkOrderApi,
-  getWorkOrderByIdApi,
-  rejectWorkOrderApi,
-  signOffWorkOrderApi,
-  startWorkOrderApi,
-  submitWorkOrderApi,
-  updateWorkOrderApi,
-} from "../../services/workOrder.api";
+  createCommand,
+  detailCommand,
+  updateCommand,
+} from "./commands";
+import {
+  approveFlow,
+  completeFlow,
+  rejectFlow,
+  signOffFlow,
+  startFlow,
+  submitForApprovalFlow,
+} from "./actionFlows";
 import {
   buildApproveModal,
   buildCompleteModal,
@@ -59,35 +61,20 @@ export function buildWorkOrderPageActions(ctx) {
   };
 
   const submitForApproval = async () => {
-    if (!submitModal.item?._id || submitModal.loading) return;
-    try {
-      setSubmitModal((prev) => ({ ...prev, loading: true, error: "" }));
-      await submitWorkOrderApi(submitModal.item._id);
-      closeSubmitModal();
-      await loadWorkOrders();
-    } catch (err) {
-      setSubmitModal((prev) => ({
-        ...prev,
-        loading: false,
-        error: err?.response?.data?.message || err?.message || "Gửi duyệt thất bại",
-      }));
-    }
+    await submitForApprovalFlow({
+      submitModal,
+      setSubmitModal,
+      closeSubmitModal,
+      loadWorkOrders,
+    });
   };
 
   const approve = async (item, assignedTo = null) => {
-    try {
-      const payload = {};
-      if (item.priority !== "urgent") {
-        payload.assignedTo = assignedTo || user?._id;
-      }
-      await approveWorkOrderApi(item._id, payload);
-      await loadWorkOrders();
-      showNotice("success", "Đã duyệt lệnh công việc.");
-      return true;
-    } catch (err) {
-      showNotice("error", err?.response?.data?.message || err?.message || "Duyệt thất bại");
-      return false;
+    const payload = {};
+    if (item.priority !== "urgent") {
+      payload.assignedTo = assignedTo || user?._id;
     }
+    return approveFlow({ item, payload, loadWorkOrders, showNotice });
   };
 
   const openApproveModal = (item) => {
@@ -134,35 +121,17 @@ export function buildWorkOrderPageActions(ctx) {
   };
 
   const submitRejectModal = async () => {
-    if (!rejectModal.item?._id || rejectModal.loading) return;
-    const reason = rejectModal.reason.trim();
-    if (!reason) {
-      setRejectModal((prev) => ({ ...prev, error: "Vui lòng nhập lý do từ chối." }));
-      return;
-    }
-    try {
-      setRejectModal((prev) => ({ ...prev, loading: true, error: "" }));
-      await rejectWorkOrderApi(rejectModal.item._id, { rejectedReason: reason });
-      closeRejectModal();
-      await loadWorkOrders();
-      showNotice("success", "Đã từ chối lệnh công việc.");
-    } catch (err) {
-      setRejectModal((prev) => ({
-        ...prev,
-        loading: false,
-        error: err?.response?.data?.message || err?.message || "Từ chối thất bại",
-      }));
-    }
+    await rejectFlow({
+      rejectModal,
+      setRejectModal,
+      closeRejectModal,
+      loadWorkOrders,
+      showNotice,
+    });
   };
 
   const start = async (id) => {
-    try {
-      await startWorkOrderApi(id);
-      await loadWorkOrders();
-      showNotice("success", "Đã bắt đầu lệnh công việc.");
-    } catch (err) {
-      showNotice("error", err?.response?.data?.message || err?.message || "Bắt đầu thất bại");
-    }
+    await startFlow({ id, loadWorkOrders, showNotice });
   };
 
   const openCompleteModal = (item) => {
@@ -174,38 +143,17 @@ export function buildWorkOrderPageActions(ctx) {
   };
 
   const submitCompleteModal = async () => {
-    if (!completeModal.item?._id || completeModal.loading) return;
-    const laborHours = Number(completeModal.laborHours);
-    if (Number.isNaN(laborHours) || laborHours < 0) {
-      setCompleteModal((prev) => ({ ...prev, error: "Giờ công không hợp lệ." }));
-      return;
-    }
-    try {
-      setCompleteModal((prev) => ({ ...prev, loading: true, error: "" }));
-      await completeWorkOrderApi(completeModal.item._id, {
-        laborHours,
-        findings: completeModal.findings.trim(),
-      });
-      closeCompleteModal();
-      await loadWorkOrders();
-      showNotice("success", "Đã hoàn thành lệnh công việc.");
-    } catch (err) {
-      setCompleteModal((prev) => ({
-        ...prev,
-        loading: false,
-        error: err?.response?.data?.message || err?.message || "Hoàn thành thất bại",
-      }));
-    }
+    await completeFlow({
+      completeModal,
+      setCompleteModal,
+      closeCompleteModal,
+      loadWorkOrders,
+      showNotice,
+    });
   };
 
   const signOff = async (id) => {
-    try {
-      await signOffWorkOrderApi(id, { qcSignOff: true });
-      await loadWorkOrders();
-      showNotice("success", "Đã sign-off lệnh công việc.");
-    } catch (err) {
-      showNotice("error", err?.response?.data?.message || err?.message || "Sign-off thất bại");
-    }
+    await signOffFlow({ id, loadWorkOrders, showNotice });
   };
 
   const openEditModal = (item) => {
@@ -224,7 +172,7 @@ export function buildWorkOrderPageActions(ctx) {
     }
     try {
       setEditModal((prev) => ({ ...prev, loading: true, error: "" }));
-      await updateWorkOrderApi(editModal.item._id, {
+      await updateCommand(editModal.item._id, {
         assetId: editModal.form.assetId,
         woType: editModal.form.woType,
         triggerSource: editModal.form.triggerSource,
@@ -246,7 +194,7 @@ export function buildWorkOrderPageActions(ctx) {
     try {
       setModalError("");
       setModalLoading(true);
-      const res = await getWorkOrderByIdApi(item._id);
+      const res = await detailCommand(item._id);
       setActionModal({ mode: "view", wo: res?.data || null });
     } catch (err) {
       setModalError(err?.response?.data?.message || err?.message || "Không tải được chi tiết Work Order.");
@@ -280,7 +228,7 @@ export function buildWorkOrderPageActions(ctx) {
     try {
       setCreateLoading(true);
       setCreateError("");
-      await createWorkOrderApi({
+      await createCommand({
         assetId: createForm.assetId,
         woType: createForm.woType,
         triggerSource: createForm.triggerSource,
