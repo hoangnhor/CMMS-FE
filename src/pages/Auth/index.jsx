@@ -121,7 +121,7 @@ function SignInPage() {
                 Digital Foreman
               </h1>
               <p className="shell-brand-subtitle mt-1 text-tertiary-fixed-dim">
-                Hệ thống Kỹ nghệ số
+                Hệ thống Kỹ thuật số
               </p>
             </div>
           </div>
