@@ -32,7 +32,7 @@ const QUICK_ACCOUNTS = [
     icon: "account_balance_wallet",
   },
 ];
-const DEMO_PASSWORD = String(import.meta.env.VITE_DEMO_PASSWORD || "").trim();
+const DEMO_PASSWORD = String(import.meta.env.VITE_DEMO_PASSWORD || "password123").trim();
 
 function SignInPage() {
   const [showPassword, setShowPassword] = useState(false);
@@ -72,12 +72,6 @@ function SignInPage() {
   const quickLogin = async (account) => {
     clearError();
     setSupportNotice("");
-    if (!DEMO_PASSWORD) {
-      setSupportNotice("Thiếu VITE_DEMO_PASSWORD. Vui lòng nhập mật khẩu thủ công.");
-      setField("email", account.email);
-      setRemember(true);
-      return;
-    }
     setField("email", account.email);
     setField("password", DEMO_PASSWORD);
     setRemember(true);
