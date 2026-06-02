@@ -1,6 +1,7 @@
 import axios from "axios";
 import { useAuthStore } from "../store/authStore";
 import { resolveApiBaseUrl } from "../utils/apiBase";
+import { clearStoredCsrfToken, getStoredCsrfToken, setStoredCsrfToken } from "../utils/csrfToken";
 
 const api = axios.create({
   baseURL: resolveApiBaseUrl(),
@@ -22,7 +23,7 @@ function readCookie(name) {
 }
 
 function buildCsrfHeaders() {
-  const csrfToken = readCookie(csrfCookieName);
+  const csrfToken = getStoredCsrfToken() || readCookie(csrfCookieName);
   return csrfToken ? { "x-csrf-token": csrfToken } : {};
 }
 
@@ -49,6 +50,7 @@ api.interceptors.response.use(
     const requestUrl = String(originalConfig?.url || "");
     const authExcluded =
       requestUrl.includes("/auth/login") ||
+      requestUrl.includes("/auth/me") ||
       requestUrl.includes("/auth/refresh") ||
       requestUrl.includes("/auth/logout");
 
@@ -67,15 +69,21 @@ api.interceptors.response.use(
                 ...buildCsrfHeaders(),
               },
             }
-          );
+          ).then((response) => {
+            const nextCsrfToken = response?.data?.data?.csrfToken || "";
+            if (nextCsrfToken) setStoredCsrfToken(nextCsrfToken);
+            return response;
+          });
         await refreshPromise;
         return api(originalConfig);
       } catch {
+        clearStoredCsrfToken();
         useAuthStore.getState().logout();
       } finally {
         refreshPromise = null;
       }
     } else if (status === 401 && authExcluded) {
+      clearStoredCsrfToken();
       useAuthStore.getState().logout();
     }
 

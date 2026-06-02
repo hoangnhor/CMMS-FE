@@ -1,6 +1,7 @@
-﻿import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { loginApi } from "../services/auth.api";
 import { useAuthStore } from "../store/authStore";
+import { setStoredCsrfToken } from "../utils/csrfToken";
 
 const REMEMBER_CREDENTIALS_KEY = "am_remember_credentials";
 
@@ -45,47 +46,52 @@ export function useAuth() {
     await hydrateStore();
   }, [hydrateStore]);
 
-  const submit = useCallback(async (override = null) => {
-    const email = override?.email ?? form.email;
-    const password = override?.password ?? form.password;
-    const rememberValue = override?.remember ?? remember;
+  const submit = useCallback(
+    async (override = null) => {
+      const email = override?.email ?? form.email;
+      const password = override?.password ?? form.password;
+      const rememberValue = override?.remember ?? remember;
 
-    try {
-      setLoading(true);
-      setError("");
+      try {
+        setLoading(true);
+        setError("");
 
-      const result = await loginApi({
-        email: email.trim(),
-        password,
-      });
+        const result = await loginApi({
+          email: email.trim(),
+          password,
+        });
 
-      if (!result?.success || !result?.data?.user) {
-        throw new Error(result?.message || "Đăng nhập thất bại");
+        if (!result?.success || !result?.data?.user) {
+          throw new Error(result?.message || "Đăng nhập thất bại");
+        }
+
+        setStoredCsrfToken(result?.data?.csrfToken || "");
+
+        if (rememberValue) {
+          localStorage.setItem(
+            REMEMBER_CREDENTIALS_KEY,
+            JSON.stringify({
+              email: email.trim(),
+              remember: true,
+            })
+          );
+        } else {
+          localStorage.removeItem(REMEMBER_CREDENTIALS_KEY);
+        }
+
+        setAuth({ user: result.data.user });
+        return true;
+      } catch (err) {
+        const message =
+          err?.response?.data?.message || err?.message || "Đăng nhập thất bại";
+        setError(message);
+        return false;
+      } finally {
+        setLoading(false);
       }
-
-      if (rememberValue) {
-        localStorage.setItem(
-          REMEMBER_CREDENTIALS_KEY,
-          JSON.stringify({
-            email: email.trim(),
-            remember: true,
-          })
-        );
-      } else {
-        localStorage.removeItem(REMEMBER_CREDENTIALS_KEY);
-      }
-
-      setAuth({ user: result.data.user });
-      return true;
-    } catch (err) {
-      const message =
-        err?.response?.data?.message || err?.message || "Đăng nhập thất bại";
-      setError(message);
-      return false;
-    } finally {
-      setLoading(false);
-    }
-  }, [form.email, form.password, remember, setAuth]);
+    },
+    [form.email, form.password, remember, setAuth]
+  );
 
   return useMemo(
     () => ({
