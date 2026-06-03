@@ -52,9 +52,10 @@ Trong production:
 
 ## Keep-alive Render
 
-- Vercel cron gọi `GET /api/keepalive` mỗi 13 phút.
+- `api/keepalive` dùng để ping BE khi gọi thủ công hoặc từ job ngoài.
+- GitHub Action `.github/workflows/keepalive.yml` hiện là cơ chế ping 13 phút.
 - Mặc định ping tới `https://cmms-be.onrender.com/api/health`.
-- Nếu backend đổi domain, set env `RENDER_HEALTH_URL` trong Vercel.
+- Nếu backend đổi domain, set env `RENDER_HEALTH_URL` trong Vercel/GitHub Actions.
 
 ## Scripts
 
