@@ -3,6 +3,7 @@ import { listAssetsApi } from "../services/asset.api";
 import { subscribeRealtime } from "../services/realtime";
 import { listWorkOrdersApi } from "../services/workOrder.api";
 import { normalizeListResponse } from "../utils/listResponse";
+import { readQueryCache } from "../utils/queryCache";
 
 const REALTIME_INTERVAL_MS = 15000;
 
@@ -95,12 +96,34 @@ function normalizeDashboard(assetSummary, workOrders) {
   };
 }
 
+const dashboardAssetsCacheConfig = { params: { paginated: true, page: 1, limit: 1 } };
+const dashboardWorkOrdersCacheConfig = { params: {} };
+
+function buildCachedDashboardState() {
+  const assetsCache = readQueryCache("GET", "/assets", dashboardAssetsCacheConfig);
+  const workOrdersCache = readQueryCache("GET", "/work-orders", dashboardWorkOrdersCacheConfig);
+  const parsedAssets = normalizeListResponse(assetsCache);
+  const summary = assetsCache?.data?.summary || {};
+
+  return {
+    assetSummary: {
+      total: parsedAssets.pagination?.total || 0,
+      active: Number(summary.active) || 0,
+      in_repair: Number(summary.in_repair) || 0,
+      idle: Number(summary.idle) || 0,
+    },
+    workOrders: Array.isArray(workOrdersCache?.data) ? workOrdersCache.data : [],
+    hasCache: Boolean(assetsCache || workOrdersCache),
+  };
+}
+
 export function useDashboard() {
-  const [loading, setLoading] = useState(true);
+  const cachedDashboard = useMemo(() => buildCachedDashboardState(), []);
+  const [loading, setLoading] = useState(!cachedDashboard.hasCache);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState("");
-  const [assetSummary, setAssetSummary] = useState({ total: 0, active: 0, in_repair: 0, idle: 0 });
-  const [workOrders, setWorkOrders] = useState([]);
+  const [assetSummary, setAssetSummary] = useState(cachedDashboard.assetSummary);
+  const [workOrders, setWorkOrders] = useState(cachedDashboard.workOrders);
   const [lastUpdatedAt, setLastUpdatedAt] = useState(null);
 
   const load = useCallback(async ({ silent = false } = {}) => {
@@ -108,7 +131,7 @@ export function useDashboard() {
       if (silent) {
         setRefreshing(true);
       } else {
-        setLoading(true);
+        setLoading(!cachedDashboard.hasCache);
       }
       setError("");
 
@@ -128,9 +151,11 @@ export function useDashboard() {
       setWorkOrders(Array.isArray(workOrdersRes?.data) ? workOrdersRes.data : []);
       setLastUpdatedAt(new Date().toISOString());
     } catch (err) {
-      setError(err?.response?.data?.message || err?.message || "Không tải được dữ liệu dashboard");
-      setAssetSummary({ total: 0, active: 0, in_repair: 0, idle: 0 });
-      setWorkOrders([]);
+      if (!cachedDashboard.hasCache) {
+        setError(err?.response?.data?.message || err?.message || "Không tải được dữ liệu dashboard");
+        setAssetSummary({ total: 0, active: 0, in_repair: 0, idle: 0 });
+        setWorkOrders([]);
+      }
     } finally {
       if (silent) {
         setRefreshing(false);
@@ -138,7 +163,7 @@ export function useDashboard() {
         setLoading(false);
       }
     }
-  }, []);
+  }, [cachedDashboard.hasCache]);
 
   useEffect(() => {
     Promise.resolve().then(() => {

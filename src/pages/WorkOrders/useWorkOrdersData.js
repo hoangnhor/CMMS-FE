@@ -3,6 +3,7 @@ import { listAssetsApi } from "../../services/asset.api";
 import { listWorkOrdersApi } from "../../services/workOrder.api";
 import { listUsersApi } from "../../services/user.api";
 import { normalizeListResponse } from "../../utils/listResponse";
+import { readQueryCache } from "../../utils/queryCache";
 import {
   PAGE_SIZE,
   buildWorkOrderNotifications,
@@ -36,10 +37,14 @@ export function useWorkOrdersData({
 
   const loadAssets = useCallback(async () => {
     try {
+      const cachedAssets = readQueryCache("GET", "/assets", { params: {} });
+      if (cachedAssets) {
+        setAssets(Array.isArray(cachedAssets?.data) ? cachedAssets.data : []);
+      }
       const res = await listAssetsApi();
       setAssets(Array.isArray(res?.data) ? res.data : []);
     } catch {
-      setAssets([]);
+      // Keep cached assets when the backend is slow or unavailable.
     }
   }, []);
 
@@ -49,15 +54,21 @@ export function useWorkOrdersData({
       return;
     }
     try {
+      const cachedUsers = readQueryCache("GET", "/users", { params: {} });
+      if (cachedUsers) {
+        const rows = Array.isArray(cachedUsers?.data) ? cachedUsers.data : [];
+        setTechnicians(rows.filter((item) => item?.role === "technician" && item?.isActive));
+      }
       const res = await listUsersApi();
       const rows = Array.isArray(res?.data) ? res.data : [];
       setTechnicians(rows.filter((item) => item?.role === "technician" && item?.isActive));
     } catch {
-      setTechnicians([]);
+      // Keep cached technicians when the backend is slow or unavailable.
     }
   }, [user?.role]);
 
   const loadWorkOrders = useCallback(async ({ silent = false } = {}) => {
+    let usedCachedSnapshot = false;
     try {
       if (!silent) setLoading(true);
       setError("");
@@ -74,6 +85,21 @@ export function useWorkOrdersData({
         params.limit = PAGE_SIZE;
       }
 
+      const cachedWorkOrders = readQueryCache("GET", "/work-orders", { params });
+      if (cachedWorkOrders) {
+        usedCachedSnapshot = true;
+        const cachedParsed = normalizeListResponse(cachedWorkOrders);
+        setWorkOrders(cachedParsed.items);
+        if (cachedParsed.pagination && !hasClientOnlyFilters) {
+          setTotalPages(cachedParsed.pagination.totalPages || 1);
+          setTotalItems(cachedParsed.pagination.total || 0);
+        } else {
+          setTotalPages(Math.max(1, Math.ceil(cachedParsed.items.length / PAGE_SIZE)));
+          setTotalItems(cachedParsed.items.length);
+        }
+        if (!silent) setLoading(false);
+      }
+
       const res = await listWorkOrdersApi(params);
       const { items, pagination } = normalizeListResponse(res);
       setWorkOrders(items);
@@ -85,10 +111,12 @@ export function useWorkOrdersData({
         setTotalItems(items.length);
       }
     } catch (err) {
-      setError(err?.response?.data?.message || err?.message || "Không tải được lệnh công việc");
-      setWorkOrders([]);
-      setTotalPages(1);
-      setTotalItems(0);
+      if (!usedCachedSnapshot) {
+        setError(err?.response?.data?.message || err?.message || "Không tải được lệnh công việc");
+        setWorkOrders([]);
+        setTotalPages(1);
+        setTotalItems(0);
+      }
     } finally {
       if (!silent) setLoading(false);
     }

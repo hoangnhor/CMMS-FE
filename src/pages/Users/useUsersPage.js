@@ -4,6 +4,7 @@ import { useAuthStore } from "../../store/authStore";
 import { logoutApi } from "../../services/auth.api";
 import { createUserApi, deleteUserApi, listUsersApi, updateUserStatusApi } from "../../services/user.api";
 import { subscribeRealtime } from "../../services/realtime";
+import { readQueryCache } from "../../utils/queryCache";
 import {
   PAGE_SIZE,
   buildCreateUserForm,
@@ -43,14 +44,23 @@ export function useUsersPage() {
       setLoading(false);
       return;
     }
+    let usedCachedSnapshot = false;
     try {
       if (!silent) setLoading(true);
       setError("");
+      const cachedUsers = readQueryCache("GET", "/users", { params: {} });
+      if (cachedUsers) {
+        usedCachedSnapshot = true;
+        setUsers(Array.isArray(cachedUsers?.data) ? cachedUsers.data : []);
+        if (!silent) setLoading(false);
+      }
       const res = await listUsersApi();
       setUsers(Array.isArray(res?.data) ? res.data : []);
     } catch (err) {
-      setError(err?.response?.data?.message || err?.message || "Không tải được danh sách người dùng");
-      setUsers([]);
+      if (!usedCachedSnapshot) {
+        setError(err?.response?.data?.message || err?.message || "Không tải được danh sách người dùng");
+        setUsers([]);
+      }
     } finally {
       if (!silent) setLoading(false);
     }

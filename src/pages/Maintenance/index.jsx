@@ -7,6 +7,7 @@ import { listAssetsApi } from "../../services/asset.api";
 import { listWorkOrdersApi } from "../../services/workOrder.api";
 import { createPmScheduleApi, listPmSchedulesApi } from "../../services/maintenance.api";
 import { subscribeRealtime } from "../../services/realtime";
+import { readQueryCache } from "../../utils/queryCache";
 import {
   PAGE_SIZE,
   buildDueByAsset,
@@ -55,9 +56,27 @@ function MaintenancePage() {
   const showNotice = (type, text) => setNotice({ type, text });
 
   const loadData = useCallback(async ({ silent = false } = {}) => {
+    let usedCachedSnapshot = false;
     try {
       if (!silent) setLoading(true);
       setError("");
+      const assetsCache = readQueryCache("GET", "/assets", { params: {} });
+      if (assetsCache) {
+        usedCachedSnapshot = true;
+        setAssets(Array.isArray(assetsCache?.data) ? assetsCache.data : []);
+      }
+      const workOrdersCache = readQueryCache("GET", "/work-orders", { params: {} });
+      if (workOrdersCache) {
+        usedCachedSnapshot = true;
+        setWorkOrders(Array.isArray(workOrdersCache?.data) ? workOrdersCache.data : []);
+      }
+      const schedulesCache = canManageMaintenance
+        ? readQueryCache("GET", "/pm-schedules", { params: {} })
+        : null;
+      if (schedulesCache) {
+        usedCachedSnapshot = true;
+        setSchedules(Array.isArray(schedulesCache?.data) ? schedulesCache.data : []);
+      }
       let assetsRes;
       let schedulesRes;
       let workOrdersRes;
@@ -80,10 +99,12 @@ function MaintenancePage() {
       setSchedules(Array.isArray(schedulesRes?.data) ? schedulesRes.data : []);
       setWorkOrders(Array.isArray(workOrdersRes?.data) ? workOrdersRes.data : []);
     } catch (err) {
-      setError(err?.response?.data?.message || err?.message || "Không tải được dữ liệu bảo trì");
-      setAssets([]);
-      setSchedules([]);
-      setWorkOrders([]);
+      if (!usedCachedSnapshot) {
+        setError(err?.response?.data?.message || err?.message || "Không tải được dữ liệu bảo trì");
+        setAssets([]);
+        setSchedules([]);
+        setWorkOrders([]);
+      }
     } finally {
       if (!silent) setLoading(false);
     }

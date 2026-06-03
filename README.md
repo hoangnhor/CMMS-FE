@@ -40,6 +40,7 @@ Tạo `.env` từ `.env.example`:
 ```env
 VITE_API_BASE_URL=http://localhost:5000/api
 VITE_DEMO_PASSWORD=
+RENDER_HEALTH_URL=https://cmms-be.onrender.com/api/health
 ```
 
 - `VITE_API_BASE_URL`: URL backend API.
@@ -48,6 +49,12 @@ VITE_DEMO_PASSWORD=
 Trong production:
 - Dùng `VITE_API_BASE_URL=https://your-backend-domain/api`, hoặc
 - Dùng `VITE_USE_SAME_ORIGIN_API=true` nếu reverse proxy `/api` cùng domain.
+
+## Keep-alive Render
+
+- Vercel cron gọi `GET /api/keepalive` mỗi 13 phút.
+- Mặc định ping tới `https://cmms-be.onrender.com/api/health`.
+- Nếu backend đổi domain, set env `RENDER_HEALTH_URL` trong Vercel.
 
 ## Scripts
 

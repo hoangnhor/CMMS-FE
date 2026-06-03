@@ -20,6 +20,7 @@ import {
 import { buildAssetPageActions } from "./actions";
 import { normalizeListResponse } from "../../utils/listResponse";
 import { useDebouncedValue } from "../../hooks/useDebouncedValue";
+import { readQueryCache } from "../../utils/queryCache";
 
 export function useAssetsPage() {
   const user = useAuthStore((state) => state.user);
@@ -54,11 +55,12 @@ export function useAssetsPage() {
   const notificationsRef = useRef(null);
   const debouncedSearch = useDebouncedValue(search, 300);
   const loadAssets = useCallback(async ({ silent = false } = {}) => {
+    let usedCachedSnapshot = false;
     try {
       if (!silent) setLoading(true);
       setError("");
       const keyword = debouncedSearch.trim();
-      const res = await listAssetsApi({
+      const requestParams = {
         paginated: true,
         page,
         limit: PAGE_SIZE,
@@ -69,7 +71,26 @@ export function useAssetsPage() {
         location: advancedFilters.location.trim() || undefined,
         minPrice: advancedFilters.minPrice.trim() || undefined,
         maxPrice: advancedFilters.maxPrice.trim() || undefined,
-      });
+      };
+      const cachedAssets = readQueryCache("GET", "/assets", { params: requestParams });
+      if (cachedAssets) {
+        usedCachedSnapshot = true;
+        const cachedParsed = normalizeListResponse(cachedAssets);
+        setAssets(cachedParsed.items);
+        if (cachedParsed.pagination) {
+          setTotalPages(cachedParsed.pagination.totalPages || 1);
+          setTotalItems(cachedParsed.pagination.total || 0);
+          const summaryData = cachedAssets?.data?.summary || {};
+          setSummary({
+            active: Number(summaryData.active) || 0,
+            in_repair: Number(summaryData.in_repair) || 0,
+            idle: Number(summaryData.idle) || 0,
+          });
+        }
+        if (!silent) setLoading(false);
+      }
+
+      const res = await listAssetsApi(requestParams);
       const { items, pagination } = normalizeListResponse(res);
       setAssets(items);
       if (pagination) {
@@ -83,11 +104,13 @@ export function useAssetsPage() {
         });
       }
     } catch (err) {
-      setError(err?.response?.data?.message || err?.message || "Không tải được dữ liệu tài sản");
-      setAssets([]);
-      setTotalPages(1);
-      setTotalItems(0);
-      setSummary({ active: 0, in_repair: 0, idle: 0 });
+      if (!usedCachedSnapshot) {
+        setError(err?.response?.data?.message || err?.message || "Không tải được dữ liệu tài sản");
+        setAssets([]);
+        setTotalPages(1);
+        setTotalItems(0);
+        setSummary({ active: 0, in_repair: 0, idle: 0 });
+      }
     } finally {
       if (!silent) setLoading(false);
     }
