@@ -49,6 +49,11 @@ Trong production:
 - Dùng `VITE_API_BASE_URL=https://your-backend-domain/api`, hoặc
 - Dùng `VITE_USE_SAME_ORIGIN_API=true` nếu reverse proxy `/api` cùng domain.
 
+Với Vercel cron keep-alive:
+- `RENDER_HEALTH_URL=https://your-backend-render.onrender.com/api/health`
+- `CRON_SECRET=<chuỗi bí mật>` nếu muốn khóa endpoint `/api/keepalive`
+- Cron gọi `GET /api/keepalive`, route này mới ping sang Render.
+
 ## Scripts
 
 ```bash
