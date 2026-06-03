@@ -35,7 +35,7 @@ Mặc định app chạy tại `http://localhost:5173`.
 
 ## Biến môi trường
 
-Tạo `.env` từ `.env.example`:
+Tạo `.env` local:
 
 ```env
 VITE_API_BASE_URL=http://localhost:5000/api
